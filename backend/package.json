@@ -1,0 +1,61 @@
+{
+  "name": "aave-client-caching-server",
+  "version": "0.0.1",
+  "private": false,
+  "scripts": {
+    "start": "npm i && nodemon",
+    "test": "jest --runInBand --detectOpenHandles",
+    "prod": "ts-node ./src/api.ts",
+    "job:update-block-number": "ts-node ./src/tasks/update-block-number/run.ts",
+    "job:update-general-reserves-data": "ts-node ./src/tasks/update-general-reserves-data/run.ts",
+    "job:update-users-data": "ts-node ./src/tasks/update-users-data/run.ts",
+    "job:update-stake-user-ui-data": "ts-node ./src/tasks/update-stake-user-ui-data/run.ts",
+    "job:update-stake-general-ui-data": "ts-node ./src/tasks/update-stake-general-ui-data/run.ts"
+  },
+  "dependencies": {
+    "@aave/protocol-js": "^3.0.0",
+    "@alch/alchemy-web3": "^1.0.3",
+    "apollo-server": "^2.25.1",
+    "class-validator": "^0.13.1",
+    "ethers": "^5.3.1",
+    "graphql": "^15.5.0",
+    "graphql-redis-subscriptions": "^2.4.0",
+    "ioredis": "^4.27.6",
+    "reflect-metadata": "^0.1.13",
+    "type-graphql": "^1.1.1"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-decorators": "^7.14.5",
+    "@babel/core": "^7.14.8",
+    "@babel/preset-env": "^7.14.9",
+    "@babel/preset-typescript": "^7.14.5",
+    "babel-jest": "^27.0.6",
+    "@types/ioredis": "^4.26.4",
+    "@types/jest": "^26.0.24",
+    "@types/node": "^14.14.31",
+    "@typescript-eslint/eslint-plugin": "^4.27.0",
+    "@typescript-eslint/parser": "^4.27.0",
+    "eslint": "^7.28.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "husky": "^6.0.0",
+    "jest": "^27.0.6",
+    "lint-staged": "^11.0.0",
+    "nodemon": "^2.0.7",
+    "prettier": "^2.3.1",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.3.3"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "export CI=true && lint-staged",
+      "pre-push": "export CI=true && lint-staged"
+    }
+  },
+  "lint-staged": {
+    "src/**/*.{ts,tsx,json,sass,md}": [
+      "prettier --single-quote --write",
+      "git add"
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+Dockerfile*
+.gitignore
+docker-compose.*
+nodemon.json
+tslint.json
+.editorconfig
