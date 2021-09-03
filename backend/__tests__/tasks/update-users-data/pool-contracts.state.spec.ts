@@ -1,5 +1,3 @@
-import { ethers } from 'ethers';
-import { AaveIncentivesController__factory } from '../../../src/contracts/ethers/AaveIncentivesController__factory';
 import { ILendingPoolAddressesProviderFactory } from '../../../src/contracts/ethers/ILendingPoolAddressesProviderFactory';
 import { ILendingPoolFactory } from '../../../src/contracts/ethers/ILendingPoolFactory';
 import { add, get, init } from '../../../src/tasks/update-users-data/pool-contracts.state';
@@ -25,7 +23,7 @@ describe('poolContractsState', () => {
     it('should return pool contracts if defined', () => {
       const _object = {
         poolAddress,
-        incentivesController: {} as any,
+        incentiveAddress: '123',
         lendingPoolContract: {} as any,
       };
       add(_object);
@@ -37,7 +35,7 @@ describe('poolContractsState', () => {
     it('should add a pool contract', () => {
       const _object = {
         poolAddress,
-        incentivesController: {} as any,
+        incentiveAddress: '123',
         lendingPoolContract: {} as any,
       };
       add(_object);
@@ -47,13 +45,13 @@ describe('poolContractsState', () => {
     it('should add a pool contracts', () => {
       const _object = {
         poolAddress,
-        incentivesController: {} as any,
+        incentiveAddress: '123',
         lendingPoolContract: {} as any,
       };
 
       const _object2 = {
         poolAddress: '123',
-        incentivesController: {} as any,
+        incentiveAddress: '123',
         lendingPoolContract: {} as any,
       };
       add(_object);
@@ -65,7 +63,7 @@ describe('poolContractsState', () => {
     it('should add only 1 pool contracts', () => {
       const _object = {
         poolAddress,
-        incentivesController: {} as any,
+        incentiveAddress: '123',
         lendingPoolContract: {} as any,
       };
       add(_object);
@@ -92,25 +90,12 @@ describe('poolContractsState', () => {
       },
     };
 
-    const rewardsClaimedMock = 'rewardsClaimedMock';
-    const AaveIncentivesControllerMock = {
-      address: 'incentivesControllerContractAddress',
-      queryFilter: jest.fn().mockImplementation(() => [{ args: { user: userAddress } }]),
-      filters: {
-        RewardsClaimed: jest.fn().mockImplementation(() => rewardsClaimedMock),
-      },
-    };
-
     beforeEach(() => {
       ILendingPoolAddressesProviderFactory.connect = jest.fn().mockImplementation(() => {
         return {
           getLendingPool: jest.fn().mockImplementation(() => lendingPool),
         };
       });
-
-      AaveIncentivesController__factory.connect = jest
-        .fn()
-        .mockImplementation(() => AaveIncentivesControllerMock);
 
       ILendingPoolFactory.connect = jest.fn().mockImplementation(() => ILendingPoolMock);
     });
@@ -127,20 +112,6 @@ describe('poolContractsState', () => {
       await init(poolAddress, ethereumProviderMock);
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith(lendingPool, ethereumProviderMock);
-    });
-
-    it('should connect to `AaveIncentivesController__factory` with correct incentives controller', async () => {
-      const spy = jest.spyOn(AaveIncentivesController__factory, 'connect');
-      await init(poolAddress, ethereumProviderMock);
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(getIncentivesControllerAddressRpcMock, ethereumProviderMock);
-    });
-
-    it('should connect to `AaveIncentivesController__factory` with ethers address zero if PROTOCOLS_WITH_INCENTIVES_ADDRESSES does not include pool address', async () => {
-      const spy = jest.spyOn(AaveIncentivesController__factory, 'connect');
-      await init('NOT_IN_POOL_ADDRESS', ethereumProviderMock);
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(ethers.constants.AddressZero, ethereumProviderMock);
     });
 
     it('should add to pool contracts', async () => {
