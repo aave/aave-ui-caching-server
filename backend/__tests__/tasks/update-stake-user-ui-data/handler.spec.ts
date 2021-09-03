@@ -17,7 +17,7 @@ import { userAddress } from '../../mocks';
 jest.mock('../../../src/helpers/ethereum', () => ({
   __esModule: true,
   getBlockNumber: jest.fn(),
-  getUsersFromLogs: jest.fn(),
+  getUsersFromLogs: jest.fn().mockImplementation(() => []),
 }));
 
 jest.mock('../../../src/pubsub', () => ({
@@ -41,13 +41,13 @@ describe('update-stake-user-ui-data', () => {
       expect(spy.mock.calls).toEqual([
         [
           [STK_AAVE_TOKEN_ADDRESS, STK_ABPT_TOKEN_ADDRESS],
-          0,
+          1,
           2,
           ['RewardsClaimed(address,address,uint256)'],
         ],
         [
           [STK_AAVE_TOKEN_ADDRESS, STK_ABPT_TOKEN_ADDRESS, AAVE_TOKEN_ADDRESS, ABPT_TOKEN],
-          0,
+          1,
           2,
           ['Transfer(address,address,uint256)'],
         ],

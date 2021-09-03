@@ -1,7 +1,5 @@
 import { ethers } from 'ethers';
 import { PROTOCOLS_WITH_INCENTIVES_ADDRESSES } from '../../config';
-import { AaveIncentivesController } from '../../contracts/ethers/AaveIncentivesController';
-import { AaveIncentivesController__factory } from '../../contracts/ethers/AaveIncentivesController__factory';
 import { ILendingPool } from '../../contracts/ethers/ILendingPool';
 import { ILendingPoolAddressesProviderFactory } from '../../contracts/ethers/ILendingPoolAddressesProviderFactory';
 import { ILendingPoolFactory } from '../../contracts/ethers/ILendingPoolFactory';
@@ -9,7 +7,7 @@ import { getIncentivesControllerAddressRpc } from '../../services/pool-data';
 
 interface PoolContracts {
   poolAddress: string;
-  incentivesController: AaveIncentivesController;
+  incentiveAddress: string;
   lendingPoolContract: ILendingPool;
 }
 
@@ -38,14 +36,11 @@ export const init = async (
     ethereumProvider
   );
 
-  const incentivesController = AaveIncentivesController__factory.connect(
-    PROTOCOLS_WITH_INCENTIVES_ADDRESSES.includes(poolAddress)
-      ? await getIncentivesControllerAddressRpc()
-      : ethers.constants.AddressZero,
-    ethereumProvider
-  );
+  const incentiveAddress = PROTOCOLS_WITH_INCENTIVES_ADDRESSES.includes(poolAddress)
+    ? await getIncentivesControllerAddressRpc()
+    : ethers.constants.AddressZero;
 
-  add({ poolAddress, lendingPoolContract, incentivesController });
+  add({ poolAddress, lendingPoolContract, incentiveAddress });
 };
 
 export const add = (context: PoolContracts) => {

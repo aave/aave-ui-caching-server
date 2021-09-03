@@ -1,4 +1,3 @@
-import { AaveIncentivesController__factory } from '../../../src/contracts/ethers/AaveIncentivesController__factory';
 import { ILendingPoolAddressesProviderFactory } from '../../../src/contracts/ethers/ILendingPoolAddressesProviderFactory';
 import { ILendingPoolFactory } from '../../../src/contracts/ethers/ILendingPoolFactory';
 import * as ethereum from '../../../src/helpers/ethereum';
@@ -82,15 +81,6 @@ const ILendingPoolMock = {
   },
 };
 
-const rewardsClaimedMock = 'rewardsClaimedMock';
-const AaveIncentivesControllerMock = {
-  address: 'incentivesControllerContractAddress',
-  queryFilter: jest.fn().mockImplementation(() => [{ args: { user: userAddress } }]),
-  filters: {
-    RewardsClaimed: jest.fn().mockImplementation(() => rewardsClaimedMock),
-  },
-};
-
 describe('update-user-data', () => {
   beforeEach(() => {
     ILendingPoolAddressesProviderFactory.connect = jest.fn().mockImplementation(() => {
@@ -98,10 +88,6 @@ describe('update-user-data', () => {
         getLendingPool: jest.fn().mockImplementation(() => lendingPool),
       };
     });
-
-    AaveIncentivesController__factory.connect = jest
-      .fn()
-      .mockImplementation(() => AaveIncentivesControllerMock);
 
     ILendingPoolFactory.connect = jest.fn().mockImplementation(() => ILendingPoolMock);
   });
@@ -131,12 +117,6 @@ describe('update-user-data', () => {
       const ILendingPoolMockQueryFilterSpy = jest.spyOn(ILendingPoolMock, 'queryFilter');
       expect(ILendingPoolMockQueryFilterSpy).toHaveBeenCalledTimes(0);
 
-      const AaveIncentivesControllerMockQueryFilterSpy = jest.spyOn(
-        AaveIncentivesControllerMock,
-        'queryFilter'
-      );
-      expect(AaveIncentivesControllerMockQueryFilterSpy).toHaveBeenCalledTimes(0);
-
       const pushUpdatedUserReserveDataToSubscriptionsSpy = jest.spyOn(
         pubsub,
         'pushUpdatedUserReserveDataToSubscriptions'
@@ -160,12 +140,12 @@ describe('update-user-data', () => {
       expect(spy).toHaveBeenCalledWith(poolAddress);
     });
 
-    it('should call `getUsersFromLogs` with correct parameters', async () => {
+    it('should call getUsersFromLogs twice with correct parameters (one for rewards)', async () => {
       await testStartUp();
       const spy = jest.spyOn(ethereum, 'getUsersFromLogs');
       await handler(poolAddress);
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(
+      expect(spy).toHaveBeenCalledTimes(2);
+      expect(spy.mock.calls[0]).toEqual([
         [
           'aTokenAddressMock1',
           'stableDebtTokenAddressMock1',
@@ -175,8 +155,15 @@ describe('update-user-data', () => {
           'variableDebtTokenAddressMock2',
         ],
         1,
-        2
-      );
+        2,
+      ]);
+
+      expect(spy.mock.calls[1]).toEqual([
+        ['getIncentivesControllerAddressRpcMock'],
+        1,
+        2,
+        ['RewardsClaimed(address,address,address,uint256)'],
+      ]);
     });
 
     it('should call `ILendingPool.queryFilter` twice with correct parameters', async () => {
@@ -204,14 +191,6 @@ describe('update-user-data', () => {
       expect(spy).toHaveBeenCalledWith(null, null);
     });
 
-    it('should call `AaveIncentivesController.queryFilter` once with correct parameters', async () => {
-      await testStartUp();
-      const spy = jest.spyOn(AaveIncentivesControllerMock, 'queryFilter');
-      await handler(poolAddress);
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toBeCalledWith(rewardsClaimedMock, 1, 2);
-    });
-
     it('should call `pushUpdatedUserReserveDataToSubscriptions` as many times as users returned, this also tests that it removes duplicates', async () => {
       await testStartUp();
       const spy = jest.spyOn(pubsub, 'pushUpdatedUserReserveDataToSubscriptions');
@@ -221,8 +200,6 @@ describe('update-user-data', () => {
 
     it('should call `pushUpdatedUserReserveDataToSubscriptions` if only `usersToUpdate` has length', async () => {
       await testStartUp();
-      jest.spyOn(AaveIncentivesControllerMock, 'queryFilter').mockImplementationOnce(() => []);
-      // hits twice!!
       jest.spyOn(ILendingPoolMock, 'queryFilter').mockImplementation(() => []);
       jest.spyOn(ethereum, 'getUsersFromLogs').mockImplementationOnce(async () => [userAddress]);
       const spy = jest.spyOn(pubsub, 'pushUpdatedUserReserveDataToSubscriptions');
@@ -232,12 +209,10 @@ describe('update-user-data', () => {
 
     it('should call `pushUpdatedUserReserveDataToSubscriptions` if only `usersWithUsageAsCollateralChange` has length', async () => {
       await testStartUp();
-      jest.spyOn(AaveIncentivesControllerMock, 'queryFilter').mockImplementationOnce(() => []);
-      // hits twice!!
       jest
         .spyOn(ILendingPoolMock, 'queryFilter')
         .mockImplementation(() => [{ args: { user: userAddress } }]);
-      jest.spyOn(ethereum, 'getUsersFromLogs').mockImplementationOnce(async () => []);
+      jest.spyOn(ethereum, 'getUsersFromLogs').mockImplementation(async () => []);
       const spy = jest.spyOn(pubsub, 'pushUpdatedUserReserveDataToSubscriptions');
       await handler(poolAddress);
       expect(spy).toHaveBeenCalledTimes(1);
@@ -245,8 +220,6 @@ describe('update-user-data', () => {
 
     it('should not call `pushUpdatedUserReserveDataToSubscriptions` if `usersToUpdate`, `usersWithUsageAsCollateralChange` and `usersWithClaimedRewards` has no length', async () => {
       await testStartUp();
-      jest.spyOn(AaveIncentivesControllerMock, 'queryFilter').mockImplementationOnce(() => []);
-      // hits twice!!
       jest.spyOn(ILendingPoolMock, 'queryFilter').mockImplementation(() => []);
       jest.spyOn(ethereum, 'getUsersFromLogs').mockImplementationOnce(async () => []);
       const spy = jest.spyOn(pubsub, 'pushUpdatedUserReserveDataToSubscriptions');

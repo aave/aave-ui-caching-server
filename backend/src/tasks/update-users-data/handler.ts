@@ -1,5 +1,3 @@
-import { ethers } from 'ethers';
-import { AaveIncentivesController } from '../../contracts/ethers/AaveIncentivesController';
 import { ILendingPool } from '../../contracts/ethers/ILendingPool';
 import { ethereumProvider, getBlockNumber, getUsersFromLogs } from '../../helpers/ethereum';
 import { pushUpdatedUserReserveDataToSubscriptions } from '../../pubsub';
@@ -33,24 +31,6 @@ const getUsersWithUsageAsCollateralChange = async (
   );
 };
 
-const getUsersWithClaimedRewards = async (
-  incentivesControllerContract: AaveIncentivesController,
-  lastSeenBlock: number,
-  currentBlock: number
-): Promise<string[]> => {
-  // TODO: temp solution, to make it more solid we should collect incentive controllers across all of the a/v/s tokens
-  if (incentivesControllerContract.address === ethers.constants.AddressZero) {
-    return [];
-  }
-
-  const events = await incentivesControllerContract.queryFilter(
-    incentivesControllerContract.filters.RewardsClaimed(null, null, null),
-    lastSeenBlock,
-    currentBlock
-  );
-  return events.map((event) => event.args.user);
-};
-
 export const handler = async (poolAddress: string) => {
   try {
     const blockContext = await getBlockContext(poolAddress);
@@ -72,12 +52,17 @@ export const handler = async (poolAddress: string) => {
             blockContext.lastSeenBlock,
             blockContext.currentBlock
           ),
-          getUsersWithClaimedRewards(
-            poolContracts.incentivesController,
+          getUsersFromLogs(
+            [poolContracts.incentiveAddress],
             blockContext.lastSeenBlock,
-            blockContext.currentBlock
+            blockContext.currentBlock,
+            ['RewardsClaimed(address,address,address,uint256)']
           ),
         ]);
+
+      console.log('usersToUpdate', usersToUpdate);
+      console.log('usersWithUsageAsCollateralChange', usersWithUsageAsCollateralChange);
+      console.log('usersWithClaimedRewardsLogs', usersWithClaimedRewards);
 
       console.log(
         `${poolAddress}: Events tracked: ${
