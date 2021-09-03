@@ -1,4 +1,3 @@
-import { ethers } from 'ethers';
 import { getParam, getParamOrExit } from './env-helpers';
 
 export const REDIS_HOST = getParamOrExit('REDIS_HOST');
@@ -21,35 +20,25 @@ export const PROTOCOL_ADDRESSES_PROVIDER_ADDRESSES = getParamOrExit(
   'PROTOCOL_ADDRESSES_PROVIDER_ADDRESSES'
 )
   .split(',')
-  .map((p) => ethers.utils.getAddress(p));
+  .map((p) => p);
 
 export const PROTOCOLS_WITH_INCENTIVES_ADDRESSES = (
   process.env.PROTOCOLS_WITH_INCENTIVES_ADDRESSES || ''
 )
   .split(',')
-  .map((p) => ethers.utils.getAddress(p));
+  .map((p) => p);
 
-export const POOL_UI_DATA_PROVIDER_ADDRESS = ethers.utils.getAddress(
-  getParamOrExit('POOL_UI_DATA_PROVIDER_ADDRESS')
-);
+export const POOL_UI_DATA_PROVIDER_ADDRESS = getParamOrExit('POOL_UI_DATA_PROVIDER_ADDRESS');
 
-export const AAVE_TOKEN_ADDRESS: string | null = ethers.utils.getAddress(
-  getParam('AAVE_TOKEN_ADDRESS')
-);
+export const AAVE_TOKEN_ADDRESS: string | null = getParam('AAVE_TOKEN_ADDRESS');
 
-export const ABPT_TOKEN: string | null = ethers.utils.getAddress(getParam('ABPT_TOKEN'));
+export const ABPT_TOKEN: string | null = getParam('ABPT_TOKEN');
 
-export const STK_AAVE_TOKEN_ADDRESS: string | null = ethers.utils.getAddress(
-  getParam('STK_AAVE_TOKEN_ADDRESS')
-);
+export const STK_AAVE_TOKEN_ADDRESS: string | null = getParam('STK_AAVE_TOKEN_ADDRESS');
 
-export const STK_ABPT_TOKEN_ADDRESS: string | null = ethers.utils.getAddress(
-  getParam('STK_ABPT_TOKEN_ADDRESS')
-);
+export const STK_ABPT_TOKEN_ADDRESS: string | null = getParam('STK_ABPT_TOKEN_ADDRESS');
 
-export const STAKE_DATA_PROVIDER: string | null = ethers.utils.getAddress(
-  getParam('STAKE_DATA_PROVIDER')
-);
+export const STAKE_DATA_PROVIDER: string | null = getParam('STAKE_DATA_PROVIDER');
 
 export const STAKE_DATA_POOLING_INTERVAL: number | null =
   Number(getParam('STAKE_DATA_POOLING_INTERVAL') || 1) * 1000;
