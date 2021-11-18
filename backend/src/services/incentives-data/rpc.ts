@@ -7,7 +7,7 @@ import {
   UserReserveIncentiveDataHumanizedResponse,
 } from '@aave/contract-helpers';
 import { ethereumProvider } from '../../helpers/ethereum';
-import { UI_INCENTIVE_DATA_PROVIDER_ADDRESS } from '../../config';
+import { CONFIG } from '../../config';
 import { ReserveIncentivesData } from '../../graphql/object-types/incentives';
 import { UserIncentivesData } from '../../graphql/object-types/user-incentives';
 
@@ -22,7 +22,7 @@ export type IncentivesRPCType = {
 export const getPoolIncentivesDataProvider = (): UiIncentiveDataProviderInterface => {
   if (!uiIncentiveProvider) {
     const uiIncentiveProviderConfig: UiIncentiveDataProviderContext = {
-      incentiveDataProviderAddress: UI_INCENTIVE_DATA_PROVIDER_ADDRESS,
+      incentiveDataProviderAddress: CONFIG.UI_INCENTIVE_DATA_PROVIDER_ADDRESS,
       provider: ethereumProvider,
     };
     uiIncentiveProvider = new UiIncentiveDataProvider(uiIncentiveProviderConfig);

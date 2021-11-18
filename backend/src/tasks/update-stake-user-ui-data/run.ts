@@ -1,4 +1,4 @@
-import { STAKE_DATA_POOLING_INTERVAL } from '../../config';
+import { STAKING_CONFIG } from '../../config';
 import { isStakeEnabled, runTask } from '../task-helpers';
 import { handler, running, startUp } from './handler';
 
@@ -19,4 +19,4 @@ export async function updateStakeUserUIData(poolingInterval = 1) {
   }
 }
 
-updateStakeUserUIData(STAKE_DATA_POOLING_INTERVAL);
+STAKING_CONFIG && updateStakeUserUIData(STAKING_CONFIG.STAKE_DATA_POOLING_INTERVAL);

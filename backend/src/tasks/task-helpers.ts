@@ -1,19 +1,13 @@
-import {
-  AAVE_TOKEN_ADDRESS,
-  ABPT_TOKEN,
-  STAKE_DATA_PROVIDER,
-  STK_AAVE_TOKEN_ADDRESS,
-  STK_ABPT_TOKEN_ADDRESS,
-} from '../config';
+import { STAKING_CONFIG } from '../config';
 import { getBlockNumber } from '../helpers/ethereum';
 import { sleep } from '../helpers/utils';
 import * as lastSeenBlockState from './last-seen-block.state';
 
 interface RunTaskContext {
   runEvery: number;
-  startupHandler?: Function | undefined;
-  mainHandler: Function;
-  runningHandler: Function;
+  startupHandler?: () => void | undefined;
+  mainHandler: () => void;
+  runningHandler: () => boolean;
 }
 
 export async function runTask(context: RunTaskContext) {
@@ -58,11 +52,5 @@ export async function getBlockContext(key: string, useCache = true): Promise<Blo
 }
 
 export function isStakeEnabled(): boolean {
-  return !!(
-    AAVE_TOKEN_ADDRESS &&
-    ABPT_TOKEN &&
-    STK_AAVE_TOKEN_ADDRESS &&
-    STK_ABPT_TOKEN_ADDRESS &&
-    STAKE_DATA_PROVIDER
-  );
+  return !!STAKING_CONFIG;
 }

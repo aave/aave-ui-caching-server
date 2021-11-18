@@ -1,9 +1,4 @@
-import {
-  AAVE_TOKEN_ADDRESS,
-  ABPT_TOKEN,
-  STK_AAVE_TOKEN_ADDRESS,
-  STK_ABPT_TOKEN_ADDRESS,
-} from '../../config';
+import { CONFIG } from '../../config';
 import { getBlockNumber, getUsersFromLogs } from '../../helpers/ethereum';
 import { pushUpdatedStakeUserUIDataToSubscriptions } from '../../pubsub';
 import * as lastSeenBlockState from '../last-seen-block.state';
@@ -19,13 +14,18 @@ export const handler = async () => {
     if (blockContext.shouldExecute) {
       const [claimedRewardUsers, transferUsers] = await Promise.all([
         getUsersFromLogs(
-          [STK_AAVE_TOKEN_ADDRESS, STK_ABPT_TOKEN_ADDRESS],
+          [CONFIG.STK_AAVE_TOKEN_ADDRESS, CONFIG.STK_ABPT_TOKEN_ADDRESS],
           blockContext.lastSeenBlock,
           blockContext.currentBlock,
           ['RewardsClaimed(address,address,uint256)']
         ),
         getUsersFromLogs(
-          [STK_AAVE_TOKEN_ADDRESS, STK_ABPT_TOKEN_ADDRESS, AAVE_TOKEN_ADDRESS, ABPT_TOKEN],
+          [
+            CONFIG.STK_AAVE_TOKEN_ADDRESS,
+            CONFIG.STK_ABPT_TOKEN_ADDRESS,
+            CONFIG.AAVE_TOKEN_ADDRESS,
+            CONFIG.ABPT_TOKEN,
+          ],
           blockContext.lastSeenBlock,
           blockContext.currentBlock,
           ['Transfer(address,address,uint256)']

@@ -1,4 +1,4 @@
-import { RECOVERY_TIMEOUT, RESERVES_LIST_VALIDITY_INTERVAL } from '../../config';
+import { RESERVES_LIST_VALIDITY_INTERVAL, CONFIG } from '../../config';
 import { sleep } from '../../helpers/utils';
 import { getProtocolData } from '../../services/pool-data';
 
@@ -40,7 +40,7 @@ export const watch = async (lendingPoolAddressProvider: string) => {
         `${lendingPoolAddressProvider}: Reserves list loading failed with error`,
         error
       );
-      await sleep(RECOVERY_TIMEOUT);
+      await sleep(CONFIG.GENERAL_RESERVES_DATA_POOLING_INTERVAL);
     }
   }
 };

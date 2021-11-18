@@ -1,4 +1,4 @@
-import { RECOVERY_TIMEOUT, RESERVES_LIST_VALIDITY_INTERVAL } from '../../config';
+import { CONFIG, RESERVES_LIST_VALIDITY_INTERVAL } from '../../config';
 import { ReserveIncentivesData } from '../../graphql/object-types/incentives';
 import { sleep } from '../../helpers/utils';
 import { getPoolIncentives } from '../../services/incentives-data';
@@ -42,7 +42,7 @@ export const watch = async (poolAddress: string) => {
       await sleep(RESERVES_LIST_VALIDITY_INTERVAL);
     } catch (error) {
       console.error(`${poolAddress}: Reserves list loading failed with error`, error);
-      await sleep(RECOVERY_TIMEOUT);
+      await sleep(CONFIG.GENERAL_RESERVES_DATA_POOLING_INTERVAL);
     }
   }
 };
