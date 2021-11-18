@@ -1,0 +1,97 @@
+name: Production deploy
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}-prod'
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_networks:
+        required: false
+        description: Specify which environments to deploy (defaults to all)
+        default: 'mainnet,polygon,avalanche'
+
+env:
+  GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+  GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
+  GKE_CLUSTER_REGION: ${{ secrets.GKE_CLUSTER_REGION }}
+
+jobs:
+  build: 
+    runs-on: ubuntu-latest
+    outputs:
+      image_name: ${{ steps.build.outputs.image_name }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: ./.github/actions/build
+        name: Build image
+        id: build
+
+  deploy_mainnet:
+    runs-on: ubuntu-latest
+    environment: production
+    needs: build
+    if: ${{ contains(github.event.inputs.deploy_networks, 'mainnet') }}
+    container: 
+      image: registry.gitlab.com/aave-tech/k8s:63f618c0
+      credentials:
+        username: github-actions
+        password: ${{ secrets.KUBE_IMAGE_PULL }}
+    env:
+      RECIPE: base+mainnet
+      DOMAIN: cache-api-mainnet.aave.com
+      NAMESPACE: cache-mainnet
+      IMAGE: ${{ needs.build.outputs.image_name }}
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Deploy
+        uses: ./.github/actions/deploy-prod
+        with:
+          MAINNET_RPC: ${{ secrets.MAINNET_RPC }}
+
+  deploy_polygon:
+    runs-on: ubuntu-latest
+    environment: production
+    needs: build
+    if: ${{ contains(github.event.inputs.deploy_networks, 'polygon') }}
+    container: 
+      image: registry.gitlab.com/aave-tech/k8s:63f618c0
+      credentials:
+        username: github-actions
+        password: ${{ secrets.KUBE_IMAGE_PULL }}
+    env:
+      RECIPE: base+polygon
+      DOMAIN: cache-api-polygon.aave.com
+      NAMESPACE: cache-polygon
+      IMAGE: ${{ needs.build.outputs.image_name }}
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Deploy
+        uses: ./.github/actions/deploy-prod
+        with:
+          POLYGON_RPC: ${{ secrets.POLYGON_RPC }}
+
+  deploy_avalanche:
+    runs-on: ubuntu-latest
+    environment: production
+    if: ${{ contains(github.event.inputs.deploy_networks, 'avalanche') }}
+    needs: build
+    container: 
+      image: registry.gitlab.com/aave-tech/k8s:63f618c0
+      credentials:
+        username: github-actions
+        password: ${{ secrets.KUBE_IMAGE_PULL }}
+    env:
+      RECIPE: base+avalanche
+      DOMAIN: cache-api-avalanche.aave.com
+      NAMESPACE: cache-avalanche
+      IMAGE: ${{ needs.build.outputs.image_name }}
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Deploy
+        uses: ./.github/actions/deploy-prod

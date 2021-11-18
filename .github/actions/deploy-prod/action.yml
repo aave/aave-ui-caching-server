@@ -1,0 +1,35 @@
+name: Deploy prod
+description: Deploy to specified production environment
+inputs:
+  MAINNET_RPC:
+    required: false
+    description: Mainnet RPC address
+  POLYGON_RPC:
+    required: false
+    description: Polygon RPC address
+runs:
+  using: "composite"
+  steps:  
+    - name: GCP Auth
+      uses: google-github-actions/auth@v0.4.0
+      with:
+        credentials_json: ${{ env.GCP_SA_KEY }}
+    - name: Get GKE credentials
+      uses: google-github-actions/get-gke-credentials@v0.4.0
+      with:
+        cluster_name: ${{ env.GKE_CLUSTER }}
+        location: ${{ env.GKE_CLUSTER_REGION }}
+
+    - name: Render kdsl resources into yaml
+      shell: sh
+      env: 
+        MAINNET_RPC: '${{ inputs.MAINNET_RPC }}'
+      run: |
+        cd k8s/
+        python3 main.py > ../rendered.yml
+    
+    - name: Apply k8s resources
+      shell: sh
+      run: |
+        kubectl apply -f rendered.yml --dry-run=server
+        kubectl apply -f rendered.yml
