@@ -15,9 +15,6 @@ export class UserReserveData {
   scaledVariableDebt: string;
 
   @Field()
-  variableBorrowIndex: string;
-
-  @Field()
   stableBorrowRate: string;
 
   @Field()
@@ -25,22 +22,4 @@ export class UserReserveData {
 
   @Field()
   stableBorrowLastUpdateTimestamp: number;
-
-  @Field()
-  aTokenincentivesUserIndex: string;
-
-  @Field()
-  vTokenincentivesUserIndex: string;
-
-  @Field()
-  sTokenincentivesUserIndex: string;
-}
-
-@ObjectType()
-export class UserData {
-  @Field(() => [UserReserveData])
-  userReserves: UserReserveData[];
-
-  @Field()
-  userUnclaimedRewards: string;
 }

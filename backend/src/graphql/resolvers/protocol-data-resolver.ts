@@ -11,14 +11,14 @@ import {
 import { ProtocolDataPayload, Topics, UserDataPayload } from '../../pubsub';
 import { getProtocolData, getProtocolUserData } from '../../services/pool-data';
 import { ProtocolData } from '../object-types/reserve';
-import { UserData } from '../object-types/user-reserve';
+import { UserReserveData } from '../object-types/user-reserve';
 import { IsEthAddress } from '../validators';
 
 @ArgsType()
 class ProtocolArgs {
   @Field()
   @IsEthAddress()
-  poolAddress: string;
+  lendingPoolAddressProvider: string;
 }
 
 @ArgsType()
@@ -31,14 +31,15 @@ class UserArgs extends ProtocolArgs {
 @Resolver()
 export class ProtocolDataResolver {
   @Query(() => ProtocolData)
-  async protocolData(@Args() { poolAddress }: ProtocolArgs): Promise<ProtocolData> {
-    return getProtocolData(poolAddress);
+  async protocolData(@Args() { lendingPoolAddressProvider }: ProtocolArgs): Promise<ProtocolData> {
+    return getProtocolData(lendingPoolAddressProvider);
   }
 
   @Subscription(() => ProtocolData, {
     topics: Topics.PROTOCOL_DATA_UPDATE,
     filter: ({ payload, args }: ResolverFilterData<ProtocolDataPayload, ProtocolArgs>) =>
-      payload.poolAddress.toLowerCase() === args.poolAddress.toLowerCase(),
+      payload.lendingPoolAddressProvider.toLowerCase() ===
+      args.lendingPoolAddressProvider.toLowerCase(),
   })
   async protocolDataUpdate(
     @Root() data: ProtocolDataPayload,
@@ -47,24 +48,25 @@ export class ProtocolDataResolver {
     return data.protocolData;
   }
 
-  @Query(() => UserData)
+  @Query(() => [UserReserveData])
   async userData(
     @Args()
-    { userAddress, poolAddress }: UserArgs
-  ): Promise<UserData> {
-    return getProtocolUserData(poolAddress, userAddress);
+    { userAddress, lendingPoolAddressProvider }: UserArgs
+  ): Promise<UserReserveData[]> {
+    return getProtocolUserData(lendingPoolAddressProvider, userAddress);
   }
 
-  @Subscription(() => UserData, {
+  @Subscription(() => [UserReserveData], {
     topics: Topics.USER_DATA_UPDATE,
     filter: ({ payload, args }: ResolverFilterData<UserDataPayload, UserArgs>) =>
-      payload.poolAddress.toLowerCase() === args.poolAddress.toLowerCase() &&
+      payload.lendingPoolAddressProvider.toLowerCase() ===
+        args.lendingPoolAddressProvider.toLowerCase() &&
       payload.userAddress.toLowerCase() === args.userAddress.toLowerCase(),
   })
   async userDataUpdate(
-    @Root() { userAddress, poolAddress }: UserDataPayload,
+    @Root() { userAddress, lendingPoolAddressProvider }: UserDataPayload,
     @Args() args: UserArgs
-  ): Promise<UserData> {
-    return getProtocolUserData(poolAddress, userAddress, false);
+  ): Promise<UserReserveData[]> {
+    return getProtocolUserData(lendingPoolAddressProvider, userAddress, false);
   }
 }

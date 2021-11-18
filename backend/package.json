@@ -10,9 +10,12 @@
     "job:update-general-reserves-data": "ts-node ./src/tasks/update-general-reserves-data/run.ts",
     "job:update-users-data": "ts-node ./src/tasks/update-users-data/run.ts",
     "job:update-stake-user-ui-data": "ts-node ./src/tasks/update-stake-user-ui-data/run.ts",
-    "job:update-stake-general-ui-data": "ts-node ./src/tasks/update-stake-general-ui-data/run.ts"
+    "job:update-stake-general-ui-data": "ts-node ./src/tasks/update-stake-general-ui-data/run.ts",
+    "job:update-users-incentives-data": "ts-node ./src/tasks/update-users-incentives-data/run.ts",
+    "job:update-reserve-incentives-data": "ts-node ./src/tasks/update-reserve-incentives-data/run.ts"
   },
   "dependencies": {
+    "@aave/contract-helpers": "0.23.0",
     "@aave/protocol-js": "^3.0.0",
     "@alch/alchemy-web3": "^1.0.3",
     "apollo-server": "^2.25.1",

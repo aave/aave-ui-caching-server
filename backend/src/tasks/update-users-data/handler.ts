@@ -31,62 +31,45 @@ const getUsersWithUsageAsCollateralChange = async (
   );
 };
 
-export const handler = async (poolAddress: string) => {
+export const handler = async (lendingPoolAddressProvider: string) => {
   try {
-    const blockContext = await getBlockContext(poolAddress);
+    const blockContext = await getBlockContext(lendingPoolAddressProvider);
     if (blockContext.shouldExecute) {
-      const poolContracts = poolContractsState.get(poolAddress);
+      const poolContracts = poolContractsState.get(lendingPoolAddressProvider);
       console.log(
         `${poolContracts.lendingPoolContract.address}: parsing transfer events via Alchemy in blocks ${blockContext.lastSeenBlock} - ${blockContext.currentBlock}`
       );
 
-      const [usersToUpdate, usersWithUsageAsCollateralChange, usersWithClaimedRewards] =
-        await Promise.all([
-          getUsersFromLogs(
-            protocolDataReservesState.get(poolAddress),
-            blockContext.lastSeenBlock,
-            blockContext.currentBlock
-          ),
-          getUsersWithUsageAsCollateralChange(
-            poolContracts.lendingPoolContract,
-            blockContext.lastSeenBlock,
-            blockContext.currentBlock
-          ),
-          getUsersFromLogs(
-            [poolContracts.incentiveAddress],
-            blockContext.lastSeenBlock,
-            blockContext.currentBlock,
-            ['RewardsClaimed(address,address,address,uint256)']
-          ),
-        ]);
+      const [usersToUpdate, usersWithUsageAsCollateralChange] = await Promise.all([
+        getUsersFromLogs(
+          protocolDataReservesState.get(lendingPoolAddressProvider),
+          blockContext.lastSeenBlock,
+          blockContext.currentBlock
+        ),
+        getUsersWithUsageAsCollateralChange(
+          poolContracts.lendingPoolContract,
+          blockContext.lastSeenBlock,
+          blockContext.currentBlock
+        ),
+      ]);
 
       console.log('usersToUpdate', usersToUpdate);
       console.log('usersWithUsageAsCollateralChange', usersWithUsageAsCollateralChange);
-      console.log('usersWithClaimedRewardsLogs', usersWithClaimedRewards);
 
       console.log(
-        `${poolAddress}: Events tracked: ${
-          usersToUpdate.length +
-          usersWithUsageAsCollateralChange.length +
-          usersWithClaimedRewards.length
+        `${lendingPoolAddressProvider}: Events tracked: ${
+          usersToUpdate.length + usersWithUsageAsCollateralChange.length
         }`
       );
-      if (
-        usersToUpdate.length ||
-        usersWithUsageAsCollateralChange.length ||
-        usersWithClaimedRewards.length
-      ) {
+      if (usersToUpdate.length || usersWithUsageAsCollateralChange.length) {
         const uniqueUsersToUpdate = [
-          ...new Set([
-            ...usersToUpdate,
-            ...usersWithUsageAsCollateralChange,
-            ...usersWithClaimedRewards,
-          ]),
+          ...new Set([...usersToUpdate, ...usersWithUsageAsCollateralChange]),
         ];
-        console.log(`${poolAddress}: Users to update ${uniqueUsersToUpdate.length}`);
+        console.log(`${lendingPoolAddressProvider}: Users to update ${uniqueUsersToUpdate.length}`);
         await Promise.all(
           uniqueUsersToUpdate.map(
-            async (user) => await pushUpdatedUserReserveDataToSubscriptions(poolAddress, user)
+            async (user) =>
+              await pushUpdatedUserReserveDataToSubscriptions(lendingPoolAddressProvider, user)
           )
         );
       } else {
@@ -100,25 +83,25 @@ export const handler = async (poolAddress: string) => {
       blockContext.commit();
     }
   } catch (e) {
-    console.error(`${poolAddress}: Users data update was failed with error`, e);
+    console.error(`${lendingPoolAddressProvider}: Users data update was failed with error`, e);
   }
 };
 
-export const startUp = async (poolAddress: string) => {
+export const startUp = async (lendingPoolAddressProvider: string) => {
   const lastSeenBlock = (await getBlockNumber()) - 10;
-  lastSeenBlockState.add(poolAddress, lastSeenBlock);
+  lastSeenBlockState.add(lendingPoolAddressProvider, lastSeenBlock);
 
-  await poolContractsState.init(poolAddress, ethereumProvider);
+  await poolContractsState.init(lendingPoolAddressProvider, ethereumProvider);
 
-  await protocolDataReservesState.fetchAndAdd(poolAddress);
-  protocolDataReservesState.watch(poolAddress);
+  await protocolDataReservesState.fetchAndAdd(lendingPoolAddressProvider);
+  protocolDataReservesState.watch(lendingPoolAddressProvider);
 
   _running = true;
   console.log('updateUserData job started up successfully');
 };
 
-export const stopHandler = (poolAddress: string) => {
-  lastSeenBlockState.remove(poolAddress);
+export const stopHandler = (lendingPoolAddressProvider: string) => {
+  lastSeenBlockState.remove(lendingPoolAddressProvider);
   _running = false;
   console.log('updateUserData job stopped successfully');
 };

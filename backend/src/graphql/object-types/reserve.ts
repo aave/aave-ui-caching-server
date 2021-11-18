@@ -1,12 +1,6 @@
 import { Field, ObjectType } from 'type-graphql';
 
 @ObjectType()
-class PriceData {
-  @Field()
-  priceInEth: string;
-}
-
-@ObjectType()
 export class ReserveData {
   @Field()
   id: string;
@@ -54,9 +48,6 @@ export class ReserveData {
   baseLTVasCollateral: string;
 
   @Field()
-  optimalUtilisationRate: string;
-
-  @Field()
   stableRateSlope1: string;
 
   @Field()
@@ -67,9 +58,6 @@ export class ReserveData {
 
   @Field()
   stableDebtLastUpdateTimestamp: number;
-
-  @Field()
-  baseVariableBorrowRate: string;
 
   @Field()
   variableRateSlope1: string;
@@ -111,34 +99,25 @@ export class ReserveData {
   lastUpdateTimestamp: number;
 
   @Field()
-  aEmissionPerSecond: string;
+  priceInMarketReferenceCurrency: string;
 
   @Field()
-  vEmissionPerSecond: string;
+  interestRateStrategyAddress: string;
+}
+
+@ObjectType()
+export class BaseCurrencyData {
+  @Field()
+  marketReferenceCurrencyDecimals: number;
 
   @Field()
-  sEmissionPerSecond: string;
+  marketReferenceCurrencyPriceInUsd: string;
 
   @Field()
-  aIncentivesLastUpdateTimestamp: number;
+  networkBaseTokenPriceInUsd: string;
 
   @Field()
-  vIncentivesLastUpdateTimestamp: number;
-
-  @Field()
-  sIncentivesLastUpdateTimestamp: number;
-
-  @Field()
-  aTokenIncentivesIndex: string;
-
-  @Field()
-  vTokenIncentivesIndex: string;
-
-  @Field()
-  sTokenIncentivesIndex: string;
-
-  @Field(() => PriceData)
-  price: PriceData;
+  networkBaseTokenPriceDecimals: number;
 }
 
 @ObjectType()
@@ -146,9 +125,6 @@ export class ProtocolData {
   @Field(() => [ReserveData])
   reserves: ReserveData[];
 
-  @Field()
-  usdPriceEth: string;
-
-  @Field()
-  emissionEndTimestamp: number;
+  @Field(() => BaseCurrencyData)
+  baseCurrencyData: BaseCurrencyData;
 }

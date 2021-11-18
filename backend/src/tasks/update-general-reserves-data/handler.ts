@@ -9,19 +9,19 @@ import { getBlockContext } from '../task-helpers';
 let _running = false;
 export const running = () => _running;
 
-export const handler = async (poolAddress: string) => {
+export const handler = async (lendingPoolAddressProvider: string) => {
   try {
-    const blockContext = await getBlockContext(poolAddress);
+    const blockContext = await getBlockContext(lendingPoolAddressProvider);
     if (blockContext.shouldExecute) {
       const [newData, redisProtcolPoolData] = await Promise.all([
-        getProtocolDataRPC(poolAddress),
-        getProtocolDataRedis(poolAddress),
+        getProtocolDataRPC(lendingPoolAddressProvider),
+        getProtocolDataRedis(lendingPoolAddressProvider),
       ]);
       const newDataHash = createHash(newData);
       if (newDataHash === redisProtcolPoolData?.hash) {
         console.log('Data is the same hash move to next block', {
           currentBlock: blockContext.currentBlock,
-          poolAddress,
+          lendingPoolAddressProvider,
           lastSeenBlock: blockContext.lastSeenBlock,
           date: new Date(),
         });
@@ -29,16 +29,19 @@ export const handler = async (poolAddress: string) => {
         return;
       }
       await Promise.all([
-        setProtocolDataRedis(poolAddress, { data: newData, hash: newDataHash }),
-        pushUpdatedReserveDataToSubscriptions(poolAddress, newData),
+        setProtocolDataRedis(lendingPoolAddressProvider, { data: newData, hash: newDataHash }),
+        pushUpdatedReserveDataToSubscriptions(lendingPoolAddressProvider, newData),
       ]);
       blockContext.commit();
       console.log(
-        `${poolAddress}: In block ${blockContext.currentBlock} protocol data in redis was updated with hash ${newDataHash}`
+        `${lendingPoolAddressProvider}: In block ${blockContext.currentBlock} protocol data in redis was updated with hash ${newDataHash}`
       );
     }
   } catch (e) {
-    console.error(`${poolAddress}: updateGeneralReservesData task was failed with error`, e);
+    console.error(
+      `${lendingPoolAddressProvider}: updateGeneralReservesData task was failed with error`,
+      e
+    );
   }
 };
 

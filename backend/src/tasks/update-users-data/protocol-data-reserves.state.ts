@@ -3,16 +3,16 @@ import { sleep } from '../../helpers/utils';
 import { getProtocolData } from '../../services/pool-data';
 
 interface ProtocolDataReserve {
-  poolAddress: string;
+  lendingPoolAddressProvider: string;
   reservesList: string[];
   timeOfReservesListFetch: number;
 }
 
 let protocolDataReserves: ProtocolDataReserve[] = [];
 
-export const fetchAndAdd = async (poolAddress: string) => {
+export const fetchAndAdd = async (lendingPoolAddressProvider: string) => {
   const reservesList: string[] = [];
-  (await getProtocolData(poolAddress)).reserves.forEach((reserve) => {
+  (await getProtocolData(lendingPoolAddressProvider)).reserves.forEach((reserve) => {
     reservesList.push(
       reserve.aTokenAddress,
       reserve.stableDebtTokenAddress,
@@ -20,39 +20,49 @@ export const fetchAndAdd = async (poolAddress: string) => {
     );
   });
 
-  add(poolAddress, reservesList);
+  add(lendingPoolAddressProvider, reservesList);
 
   return reservesList;
 };
 
-export const watch = async (poolAddress: string) => {
+export const watch = async (lendingPoolAddressProvider: string) => {
   while (true) {
     try {
-      console.log('WATCHER - Fetching new reserves lists', poolAddress);
-      const reservesList = await fetchAndAdd(poolAddress);
-      console.log('WATCHER - Fetched new reserves lists', { poolAddress, reservesList });
+      console.log('WATCHER - Fetching new reserves lists', lendingPoolAddressProvider);
+      const reservesList = await fetchAndAdd(lendingPoolAddressProvider);
+      console.log('WATCHER - Fetched new reserves lists', {
+        lendingPoolAddressProvider,
+        reservesList,
+      });
       await sleep(RESERVES_LIST_VALIDITY_INTERVAL);
     } catch (error) {
-      console.error(`${poolAddress}: Reserves list loading failed with error`, error);
+      console.error(
+        `${lendingPoolAddressProvider}: Reserves list loading failed with error`,
+        error
+      );
       await sleep(RECOVERY_TIMEOUT);
     }
   }
 };
 
-export const get = (poolAddress: string): string[] => {
+export const get = (lendingPoolAddressProvider: string): string[] => {
   const reservesList = protocolDataReserves.find(
-    (reserve) => reserve.poolAddress === poolAddress
+    (reserve) => reserve.lendingPoolAddressProvider === lendingPoolAddressProvider
   )?.reservesList;
 
   if (!reservesList?.length) {
-    throw new Error(`reservesList for ${poolAddress} is empty`);
+    throw new Error(`reservesList for ${lendingPoolAddressProvider} is empty`);
   }
   return reservesList;
 };
 
-export const add = (poolAddress: string, reservesList: string[]) => {
+export const add = (lendingPoolAddressProvider: string, reservesList: string[]) => {
   protocolDataReserves = protocolDataReserves.filter(
-    (reserve) => reserve.poolAddress !== poolAddress
+    (reserve) => reserve.lendingPoolAddressProvider !== lendingPoolAddressProvider
   );
-  protocolDataReserves.push({ poolAddress, reservesList, timeOfReservesListFetch: Date.now() });
+  protocolDataReserves.push({
+    lendingPoolAddressProvider,
+    reservesList,
+    timeOfReservesListFetch: Date.now(),
+  });
 };

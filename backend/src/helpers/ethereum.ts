@@ -46,6 +46,7 @@ export const getUsersFromLogs = async (
   toBlock: number,
   topics: string[] = ['Transfer(address,address,uint256)']
 ): Promise<string[]> => {
+  if (reservesList.length === 0) return [];
   const rawLogs = await alchemyWeb3Provider.eth.getPastLogs({
     fromBlock,
     toBlock,

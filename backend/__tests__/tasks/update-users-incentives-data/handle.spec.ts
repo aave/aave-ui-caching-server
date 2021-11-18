@@ -9,13 +9,13 @@ import {
   running,
   startUp,
   stopHandler,
-} from '../../../src/tasks/update-users-data/handler';
-import * as poolContractsState from '../../../src/tasks/update-users-data/pool-contracts.state';
-import * as protocolDataReservesState from '../../../src/tasks/update-users-data/protocol-data-reserves.state';
+} from '../../../src/tasks/update-users-incentives-data/handler';
+import * as poolContractsState from '../../../src/tasks/update-users-incentives-data/pool-contracts.state';
+import * as poolIncentivesDataState from '../../../src/tasks/update-users-incentives-data/pool-incentives-data.state';
 import { poolAddress, userAddress } from '../../mocks';
 
 // @ts-ignore
-protocolDataReservesState.watch = jest.fn();
+poolIncentivesDataState.watch = jest.fn();
 
 const ethereumProviderMock = {} as any;
 
@@ -28,27 +28,51 @@ jest.mock('../../../src/helpers/ethereum', () => ({
 
 jest.mock('../../../src/pubsub', () => ({
   __esModule: true,
-  pushUpdatedUserReserveDataToSubscriptions: jest.fn(),
+  pushUpdatedUserPoolIncentivesDataToSubscriptions: jest.fn(),
 }));
 
-const getProtocolDataMock = {
-  reserves: [
-    {
-      aTokenAddress: 'aTokenAddressMock1',
-      stableDebtTokenAddress: 'stableDebtTokenAddressMock1',
-      variableDebtTokenAddress: 'variableDebtTokenAddressMock1',
+const getPoolIncentivesDataMock = [
+  {
+    aIncentiveData: {
+      emissionEndTimestamp: 1,
+      tokenAddress: 'aTokenAddressMock1',
+      incentiveControllerAddress: 'aTokenAddressMock1',
     },
-    {
-      aTokenAddress: 'aTokenAddressMock2',
-      stableDebtTokenAddress: 'stableDebtTokenAddressMock2',
-      variableDebtTokenAddress: 'variableDebtTokenAddressMock2',
+    sIncentiveData: {
+      emissionEndTimestamp: 1,
+      tokenAddress: 'stableDebtTokenAddressMock1',
+      incentiveControllerAddress: 'stableDebtTokenAddressMock1',
     },
-  ],
-};
+    vIncentiveData: {
+      emissionEndTimestamp: 1,
+      tokenAddress: 'variableDebtTokenAddressMock1',
+      incentiveControllerAddress: 'variableDebtTokenAddressMock1',
+    },
+  },
+  {
+    emissionEndTimestamp: 1,
+    aIncentiveData: {
+      emissionEndTimestamp: 1,
+      tokenAddress: 'aTokenAddressMock2',
+      incentiveControllerAddress: 'aTokenAddressMock2',
+    },
+    sIncentiveData: {
+      emissionEndTimestamp: 1,
+      tokenAddress: 'stableDebtTokenAddressMock2',
+      incentiveControllerAddress: 'stableDebtTokenAddressMock2',
+    },
+    vIncentiveData: {
+      emissionEndTimestamp: 1,
+      tokenAddress: 'variableDebtTokenAddressMock2',
+      incentiveControllerAddress: 'variableDebtTokenAddressMock2',
+    },
+  },
+];
 
-jest.mock('../../../src/services/pool-data/provider', () => ({
+jest.mock('../../../src/services/incentives-data', () => ({
   __esModule: true,
-  getProtocolData: jest.fn().mockImplementation(() => getProtocolDataMock),
+  getPoolIncentivesRPC: jest.fn().mockImplementation(() => getPoolIncentivesDataMock),
+  getPoolIncentives: jest.fn().mockImplementation(() => getPoolIncentivesDataMock),
 }));
 
 const testStartUp = async () => {
@@ -72,7 +96,7 @@ const ILendingPoolMock = {
   },
 };
 
-describe('update-user-data', () => {
+describe('update-user-incentive-data', () => {
   beforeEach(() => {
     ILendingPoolAddressesProviderFactory.connect = jest.fn().mockImplementation(() => {
       return {
@@ -108,11 +132,11 @@ describe('update-user-data', () => {
       const ILendingPoolMockQueryFilterSpy = jest.spyOn(ILendingPoolMock, 'queryFilter');
       expect(ILendingPoolMockQueryFilterSpy).toHaveBeenCalledTimes(0);
 
-      const pushUpdatedUserReserveDataToSubscriptionsSpy = jest.spyOn(
+      const pushUpdatedUserPoolIncentivesDataToSubscriptionsSpy = jest.spyOn(
         pubsub,
-        'pushUpdatedUserReserveDataToSubscriptions'
+        'pushUpdatedUserPoolIncentivesDataToSubscriptions'
       );
-      expect(pushUpdatedUserReserveDataToSubscriptionsSpy).toHaveBeenCalledTimes(0);
+      expect(pushUpdatedUserPoolIncentivesDataToSubscriptionsSpy).toHaveBeenCalledTimes(0);
     });
 
     it('should call `poolContractsState.get`', async () => {
@@ -123,9 +147,9 @@ describe('update-user-data', () => {
       expect(spy).toHaveBeenCalledWith(poolAddress);
     });
 
-    it('should call `protocolDataReservesState.get`', async () => {
+    it('should call `poolIncentivesDataState.get`', async () => {
       await testStartUp();
-      const spy = jest.spyOn(protocolDataReservesState, 'get');
+      const spy = jest.spyOn(poolIncentivesDataState, 'get');
       await handler(poolAddress);
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith(poolAddress);
@@ -135,7 +159,7 @@ describe('update-user-data', () => {
       await testStartUp();
       const spy = jest.spyOn(ethereum, 'getUsersFromLogs');
       await handler(poolAddress);
-      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledTimes(2);
       expect(spy.mock.calls[0]).toEqual([
         [
           'aTokenAddressMock1',
@@ -148,65 +172,36 @@ describe('update-user-data', () => {
         1,
         2,
       ]);
+
+      expect(spy.mock.calls[1]).toEqual([
+        [
+          'atokenaddressmock1',
+          'stabledebttokenaddressmock1',
+          'variabledebttokenaddressmock1',
+          'atokenaddressmock2',
+          'stabledebttokenaddressmock2',
+          'variabledebttokenaddressmock2',
+        ],
+        1,
+        2,
+        ['RewardsClaimed(address,address,address,uint256)'],
+      ]);
     });
 
-    it('should call `ILendingPool.queryFilter` twice with correct parameters', async () => {
-      await testStartUp();
-      const spy = jest.spyOn(ILendingPoolMock, 'queryFilter');
-      await handler(poolAddress);
-      expect(spy).toHaveBeenCalledTimes(2);
-      expect(spy.mock.calls[0]).toEqual([reserveUsedAsCollateralDisabledMock, 1, 2]);
-      expect(spy.mock.calls[1]).toEqual([reserveUsedAsCollateralEnabledMock, 1, 2]);
-    });
-
-    it('should call `ILendingPool.filters.ReserveUsedAsCollateralDisabled` once with correct parameters', async () => {
-      await testStartUp();
-      const spy = jest.spyOn(ILendingPoolMock.filters, 'ReserveUsedAsCollateralDisabled');
-      await handler(poolAddress);
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(null, null);
-    });
-
-    it('should call `ILendingPool.filters.ReserveUsedAsCollateralEnabled` once with correct parameters', async () => {
-      await testStartUp();
-      const spy = jest.spyOn(ILendingPoolMock.filters, 'ReserveUsedAsCollateralDisabled');
-      await handler(poolAddress);
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(null, null);
-    });
-
-    it('should call `pushUpdatedUserReserveDataToSubscriptions` as many times as users returned, this also tests that it removes duplicates', async () => {
-      await testStartUp();
-      const spy = jest.spyOn(pubsub, 'pushUpdatedUserReserveDataToSubscriptions');
-      await handler(poolAddress);
-      expect(spy).toHaveBeenCalledTimes(1);
-    });
-
-    it('should call `pushUpdatedUserReserveDataToSubscriptions` if only `usersToUpdate` has length', async () => {
+    it('should call `pushUpdatedUserPoolIncentivesDataToSubscriptions` if only `usersToUpdate` has length', async () => {
       await testStartUp();
       jest.spyOn(ILendingPoolMock, 'queryFilter').mockImplementation(() => []);
       jest.spyOn(ethereum, 'getUsersFromLogs').mockImplementationOnce(async () => [userAddress]);
-      const spy = jest.spyOn(pubsub, 'pushUpdatedUserReserveDataToSubscriptions');
+      const spy = jest.spyOn(pubsub, 'pushUpdatedUserPoolIncentivesDataToSubscriptions');
       await handler(poolAddress);
       expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    it('should call `pushUpdatedUserReserveDataToSubscriptions` if only `usersWithUsageAsCollateralChange` has length', async () => {
-      await testStartUp();
-      jest
-        .spyOn(ILendingPoolMock, 'queryFilter')
-        .mockImplementation(() => [{ args: { user: userAddress } }]);
-      jest.spyOn(ethereum, 'getUsersFromLogs').mockImplementation(async () => []);
-      const spy = jest.spyOn(pubsub, 'pushUpdatedUserReserveDataToSubscriptions');
-      await handler(poolAddress);
-      expect(spy).toHaveBeenCalledTimes(1);
-    });
-
-    it('should not call `pushUpdatedUserReserveDataToSubscriptions` if `usersToUpdate`, `usersWithUsageAsCollateralChange` and `usersWithClaimedRewards` has no length', async () => {
+    it('should not call `pushUpdatedUserPoolIncentivesDataToSubscriptions` if `usersToUpdate`, and `usersWithClaimedRewards` has no length', async () => {
       await testStartUp();
       jest.spyOn(ILendingPoolMock, 'queryFilter').mockImplementation(() => []);
       jest.spyOn(ethereum, 'getUsersFromLogs').mockImplementationOnce(async () => []);
-      const spy = jest.spyOn(pubsub, 'pushUpdatedUserReserveDataToSubscriptions');
+      const spy = jest.spyOn(pubsub, 'pushUpdatedUserPoolIncentivesDataToSubscriptions');
       await handler(poolAddress);
       expect(spy).toHaveBeenCalledTimes(0);
     });
@@ -228,7 +223,9 @@ describe('update-user-data', () => {
 
     it('should call `lastSeenBlockState.add`', async () => {
       const spy = jest.spyOn(lastSeenBlockState, 'add');
+      const blockSpy = jest.spyOn(ethereum, 'getBlockNumber').mockImplementation(async () => 20);
       await startUp(poolAddress);
+      expect(blockSpy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith(poolAddress, 10);
     });
@@ -240,15 +237,15 @@ describe('update-user-data', () => {
       expect(spy).toHaveBeenCalledWith(poolAddress, ethereumProviderMock);
     });
 
-    it('should call `protocolDataReservesState.fetchAndAdd`', async () => {
-      const spy = jest.spyOn(protocolDataReservesState, 'fetchAndAdd');
+    it('should call `poolIncentivesDataState.fetchAndAdd`', async () => {
+      const spy = jest.spyOn(poolIncentivesDataState, 'fetchAndAdd');
       await startUp(poolAddress);
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith(poolAddress);
     });
 
-    it('should call `protocolDataReservesState.watch`', async () => {
-      const spy = jest.spyOn(protocolDataReservesState, 'watch');
+    it('should call `poolIncentivesDataState.watch`', async () => {
+      const spy = jest.spyOn(poolIncentivesDataState, 'watch');
       await startUp(poolAddress);
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith(poolAddress);

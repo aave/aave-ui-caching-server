@@ -1,27 +1,27 @@
 import {
-  GENERAL_RESERVES_DATA_POOLING_INTERVAL,
+  USER_INCENTIVES_DATA_POOLING_INTERVAL,
   PROTOCOL_ADDRESSES_PROVIDER_ADDRESSES,
 } from '../../config';
 import { runTask } from '../task-helpers';
 import { handler, running, startUp } from './handler';
 
 PROTOCOL_ADDRESSES_PROVIDER_ADDRESSES.forEach((lendingPoolAddressProvider) =>
-  updateGeneralReservesData(lendingPoolAddressProvider)
+  updateUsersIncentivesData(lendingPoolAddressProvider)
 );
 
-async function updateGeneralReservesData(
+async function updateUsersIncentivesData(
   lendingPoolAddressProvider: string,
-  poolingInterval = GENERAL_RESERVES_DATA_POOLING_INTERVAL
+  poolingInterval = USER_INCENTIVES_DATA_POOLING_INTERVAL
 ) {
   console.log(
-    `updateGeneralReservesData job starting up with poolingInterval ${
+    `updateUserIncentivesData job starting up with poolingInterval ${
       poolingInterval / 1000
     }s for pool address ${lendingPoolAddressProvider}`
   );
 
   await runTask({
     runEvery: poolingInterval,
-    startupHandler: startUp,
+    startupHandler: () => startUp(lendingPoolAddressProvider),
     mainHandler: () => handler(lendingPoolAddressProvider),
     runningHandler: running,
   });

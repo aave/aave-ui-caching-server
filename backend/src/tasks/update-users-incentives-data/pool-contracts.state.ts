@@ -2,9 +2,12 @@ import { ethers } from 'ethers';
 import { ILendingPool } from '../../contracts/ethers/ILendingPool';
 import { ILendingPoolAddressesProviderFactory } from '../../contracts/ethers/ILendingPoolAddressesProviderFactory';
 import { ILendingPoolFactory } from '../../contracts/ethers/ILendingPoolFactory';
+import { ReserveIncentivesData } from '../../graphql/object-types/incentives';
+import { getPoolIncentivesRPC } from '../../services/incentives-data';
 
 interface PoolContracts {
   lendingPoolAddressProvider: string;
+  incentiveControllers: string[];
   lendingPoolContract: ILendingPool;
 }
 
@@ -35,7 +38,31 @@ export const init = async (
     ethereumProvider
   );
 
-  add({ lendingPoolAddressProvider, lendingPoolContract });
+  // get all incentive providers:
+  const reserveIncentives: ReserveIncentivesData[] = await getPoolIncentivesRPC({
+    lendingPoolAddressProvider,
+  });
+  const incentiveControllers: string[] = [];
+  reserveIncentives.forEach((incentive: ReserveIncentivesData) => {
+    const aIncentiveController = incentive.aIncentiveData.incentiveControllerAddress.toLowerCase();
+    const sIncentiveController = incentive.sIncentiveData.incentiveControllerAddress.toLowerCase();
+    const vIncentiveController = incentive.vIncentiveData.incentiveControllerAddress.toLowerCase();
+    if (incentiveControllers.indexOf(aIncentiveController) === -1) {
+      incentiveControllers.push(aIncentiveController);
+    }
+    if (incentiveControllers.indexOf(sIncentiveController) === -1) {
+      incentiveControllers.push(sIncentiveController);
+    }
+    if (incentiveControllers.indexOf(vIncentiveController) === -1) {
+      incentiveControllers.push(vIncentiveController);
+    }
+  });
+
+  if (incentiveControllers.length === 0) {
+    incentiveControllers.push(ethers.constants.AddressZero);
+  }
+
+  add({ lendingPoolAddressProvider, lendingPoolContract, incentiveControllers });
 };
 
 export const add = (context: PoolContracts) => {

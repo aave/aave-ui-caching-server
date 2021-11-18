@@ -1,15 +1,40 @@
 import { ILendingPoolAddressesProviderFactory } from '../../../src/contracts/ethers/ILendingPoolAddressesProviderFactory';
 import { ILendingPoolFactory } from '../../../src/contracts/ethers/ILendingPoolFactory';
-import { add, get, init } from '../../../src/tasks/update-users-data/pool-contracts.state';
+import {
+  add,
+  get,
+  init,
+} from '../../../src/tasks/update-users-incentives-data/pool-contracts.state';
 import { poolAddress, userAddress } from '../../mocks';
+import * as rpc from '../../../src/services/incentives-data';
 
-const getIncentivesControllerAddressRpcMock = 'getIncentivesControllerAddressRpcMock';
-
-jest.mock('../../../src/services/pool-data/rpc', () => ({
+const getPoolIncentivesRPCMockResponse = [
+  {
+    aIncentiveData: {
+      incentiveControllerAddress: 'aTokenAddressMock1',
+    },
+    sIncentiveData: {
+      incentiveControllerAddress: 'stableDebtTokenAddressMock1',
+    },
+    vIncentiveData: {
+      incentiveControllerAddress: 'variableDebtTokenAddressMock1',
+    },
+  },
+  {
+    aIncentiveData: {
+      incentiveControllerAddress: 'aTokenAddressMock2',
+    },
+    sIncentiveData: {
+      incentiveControllerAddress: 'stableDebtTokenAddressMock2',
+    },
+    vIncentiveData: {
+      incentiveControllerAddress: 'variableDebtTokenAddressMock2',
+    },
+  },
+];
+jest.mock('../../../src/services/incentives-data', () => ({
   __esModule: true,
-  getIncentivesControllerAddressRpc: jest
-    .fn()
-    .mockImplementation(() => getIncentivesControllerAddressRpcMock),
+  getPoolIncentivesRPC: jest.fn().mockImplementation(() => getPoolIncentivesRPCMockResponse),
 }));
 
 describe('poolContractsState', () => {
@@ -23,19 +48,18 @@ describe('poolContractsState', () => {
     it('should return pool contracts if defined', () => {
       const _object = {
         lendingPoolAddressProvider: poolAddress,
-        incentiveAddress: '123',
+        incentiveControllers: ['123'],
         lendingPoolContract: {} as any,
       };
       add(_object);
       expect(get(poolAddress)).toEqual(_object);
     });
   });
-
   describe('add', () => {
     it('should add a pool contract', () => {
       const _object = {
         lendingPoolAddressProvider: poolAddress,
-        incentiveAddress: '123',
+        incentiveControllers: ['123'],
         lendingPoolContract: {} as any,
       };
       add(_object);
@@ -45,13 +69,13 @@ describe('poolContractsState', () => {
     it('should add a pool contracts', () => {
       const _object = {
         lendingPoolAddressProvider: poolAddress,
-        incentiveAddress: '123',
+        incentiveControllers: ['123'],
         lendingPoolContract: {} as any,
       };
 
       const _object2 = {
         lendingPoolAddressProvider: '123',
-        incentiveAddress: '123',
+        incentiveControllers: ['123'],
         lendingPoolContract: {} as any,
       };
       add(_object);
@@ -63,7 +87,7 @@ describe('poolContractsState', () => {
     it('should add only 1 pool contracts', () => {
       const _object = {
         lendingPoolAddressProvider: poolAddress,
-        incentiveAddress: '123',
+        incentiveControllers: ['123'],
         lendingPoolContract: {} as any,
       };
       add(_object);
@@ -112,6 +136,13 @@ describe('poolContractsState', () => {
       await init(poolAddress, ethereumProviderMock);
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith(lendingPool, ethereumProviderMock);
+    });
+
+    it('should call `getPoolIncentivesRPC`', async () => {
+      const spy = jest.spyOn(rpc, 'getPoolIncentivesRPC');
+      await init(poolAddress, ethereumProviderMock);
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith({ lendingPoolAddressProvider: poolAddress });
     });
 
     it('should add to pool contracts', async () => {

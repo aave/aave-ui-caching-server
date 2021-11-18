@@ -22,13 +22,21 @@ export const PROTOCOL_ADDRESSES_PROVIDER_ADDRESSES = getParamOrExit(
   .split(',')
   .map((p) => p);
 
-export const PROTOCOLS_WITH_INCENTIVES_ADDRESSES = (
-  process.env.PROTOCOLS_WITH_INCENTIVES_ADDRESSES || ''
-)
-  .split(',')
-  .map((p) => p);
+// export const PROTOCOLS_WITH_INCENTIVES_ADDRESSES = (
+//   process.env.PROTOCOLS_WITH_INCENTIVES_ADDRESSES || ''
+// )
+//   .split(',')
+//   .map((p) => p);
 
 export const POOL_UI_DATA_PROVIDER_ADDRESS = getParamOrExit('POOL_UI_DATA_PROVIDER_ADDRESS');
+
+export const UI_INCENTIVE_DATA_PROVIDER_ADDRESS = getParamOrExit(
+  'UI_INCENTIVE_DATA_PROVIDER_ADDRESS'
+);
+
+export const CHAINLINK_FEEDS_REGISTRY: string | null = getParam('CHAINLINK_FEEDS_REGISTRY');
+
+export const CHAINLINK_FEED_QUOTE: string | null = getParam('CHAINLINK_FEED_QUOTE');
 
 export const AAVE_TOKEN_ADDRESS: string | null = getParam('AAVE_TOKEN_ADDRESS');
 
@@ -45,6 +53,12 @@ export const STAKE_DATA_POOLING_INTERVAL: number | null =
 
 export const BLOCK_NUMBER_POOLING_INTERVAL =
   Number(getParam('BLOCK_NUMBER_POOLING_INTERVAL') || 1) * 1000;
+
+export const RESERVE_INCENTIVES_DATA_POOLING_INTERVAL =
+  Number(getParam('RESERVE_INCENTIVES_DATA_POOLING_INTERVAL') || 3) * 1000;
+
+export const USER_INCENTIVES_DATA_POOLING_INTERVAL =
+  Number(getParam('USER_INCENTIVES_DATA_POOLING_INTERVAL') || 3) * 1000;
 
 export const GENERAL_RESERVES_DATA_POOLING_INTERVAL =
   Number(getParam('GENERAL_RESERVES_DATA_POOLING_INTERVAL') || 3) * 1000;

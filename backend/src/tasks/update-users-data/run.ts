@@ -2,21 +2,24 @@ import { PROTOCOL_ADDRESSES_PROVIDER_ADDRESSES, USERS_DATA_POOLING_INTERVAL } fr
 import { runTask } from '../task-helpers';
 import { handler, running, startUp } from './handler';
 
-PROTOCOL_ADDRESSES_PROVIDER_ADDRESSES.forEach((poolAddress) => {
-  updatUsersData(poolAddress);
+PROTOCOL_ADDRESSES_PROVIDER_ADDRESSES.forEach((lendingPoolAddressProvider) => {
+  updatUsersData(lendingPoolAddressProvider);
 });
 
-async function updatUsersData(poolAddress: string, poolingInterval = USERS_DATA_POOLING_INTERVAL) {
+async function updatUsersData(
+  lendingPoolAddressProvider: string,
+  poolingInterval = USERS_DATA_POOLING_INTERVAL
+) {
   console.log(
-    `updateUserData job starting up for pool ${poolAddress} poolingInterval ${
+    `updateUserData job starting up for pool ${lendingPoolAddressProvider} poolingInterval ${
       poolingInterval / 1000
     }s`
   );
 
   await runTask({
     runEvery: poolingInterval,
-    startupHandler: () => startUp(poolAddress),
-    mainHandler: () => handler(poolAddress),
+    startupHandler: () => startUp(lendingPoolAddressProvider),
+    mainHandler: () => handler(lendingPoolAddressProvider),
     runningHandler: running,
   });
 }
