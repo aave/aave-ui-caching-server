@@ -1,0 +1,78 @@
+name: On Pull Request
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+on:
+  pull_request: 
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build: 
+    runs-on: ubuntu-latest
+    outputs:
+      image_name: ${{ steps.build.outputs.image_name }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: ./.github/actions/build
+        name: Build image
+        id: build
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: ./.github/actions/test
+        name: Run tests
+
+  deploy_dev:
+    runs-on: ubuntu-latest
+    environment: preview
+    needs: build
+    container: 
+      image: registry.gitlab.com/aave-tech/k8s:63f618c0
+      credentials:
+        username: github-actions
+        password: ${{ secrets.KUBE_IMAGE_PULL }}
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set k8s namespace
+        shell: bash
+        run:
+          echo "NAMESPACE=cache-${REF_NAME,,}" | tr -c '[:alnum:]-=\n' '-' >>${GITHUB_ENV}
+        env:
+          REF_NAME: '${{ github.head_ref }}'
+      
+      - name: Render kdsl resources into yaml
+        env: 
+          IMAGE: '${{ needs.build.outputs.image_name }}'
+          RECIPE: base+mainnet
+          DOMAIN: '${{ env.NAMESPACE }}.aaw.fi'
+          MAINNET_RPC: '${{ secrets.MAINNET_RPC }}'
+        run: |
+          cd k8s/
+          python3 main.py > ../rendered.yml
+      
+      - name: Set up kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.DEV_KUBECONFIG }}" > ~/.kube/config
+      
+      - name: Apply k8s resources
+        run: |
+          kubectl apply -f rendered.yml
+
+      - uses: actions/github-script@v5
+        if: ${{ github.event.action == 'opened' || github.event.action == 'reopened' }}
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.payload.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Preview link: https://${{ env.NAMESPACE }}.aaw.fi/'
+            })
