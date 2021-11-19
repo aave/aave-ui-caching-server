@@ -4,11 +4,17 @@ from kdsl.core.v1 import ObjectMeta
 from kdsl.core.v1 import Service, PodSpec, ObjectMeta, ContainerItem
 from kdsl.apps.v1 import Deployment
 from kdsl.extra import mk_env
-from kdsl.recipe import overlay, collection
+from kdsl.recipe import choice, collection
 from typing import Sequence, Optional
 
 env = mk_env(
-    REDIS_HOST="redis"
+    REDIS_HOST="redis",
+    RPC_URL=choice(
+        chain1=values.MAINNET_RPC,
+        chain137=values.POLYGON_RPC,
+        chain43114="https://api.avax.network/ext/bc/C/rpc"
+    ),
+    CHAIN_ID=values.CHAIN_ID,
 )
 
 
@@ -97,7 +103,7 @@ entries = collection(
             command=["npm", "run", "job:update-block-number"],
         ),
     ],
-    mainnet=[
+    chain1=[
         *mk_backend_entries(
             name="stake-general-data-loader",
             command=["npm", "run", "job:update-stake-general-ui-data"],
