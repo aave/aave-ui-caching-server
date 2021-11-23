@@ -26,6 +26,14 @@ services:
     <<: *common-environment
     command: "npm run job:update-general-reserves-data"
 
+  reserves_incentives_data_loader:
+    <<: *common-environment
+    command: "npm run job:update-reserve-incentives-data"
+
+  user_incentives_data_loader:
+    <<: *common-environment
+    command: "npm run job:update-users-incentives-data"
+
   user_data_loader:
     <<: *common-environment
     command: "npm run job:update-users-data"
@@ -43,4 +51,4 @@ services:
     command: "npm run job:update-block-number"
 
   redis:
-    image: redis:alpine
+    image: redis:6-alpine
