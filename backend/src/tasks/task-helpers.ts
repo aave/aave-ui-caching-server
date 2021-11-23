@@ -5,7 +5,7 @@ import * as lastSeenBlockState from './last-seen-block.state';
 
 interface RunTaskContext {
   runEvery: number;
-  startupHandler?: () => void | undefined;
+  startupHandler?: any;
   mainHandler: () => void;
   runningHandler: () => boolean;
 }

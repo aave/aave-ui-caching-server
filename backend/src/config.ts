@@ -21,7 +21,7 @@ export const CHAIN_ID = Number(process.env.CHAIN_ID || '0') as
   | ChainId.polygon
   | ChainId.avalanche;
 
-if (![ChainId.mainnet | ChainId.polygon | ChainId.avalanche].includes(CHAIN_ID)) {
+if (![ChainId.mainnet, ChainId.polygon, ChainId.avalanche].includes(CHAIN_ID)) {
   throw new Error(`ChainId: "${CHAIN_ID}" is not currently supported`);
 }
 
