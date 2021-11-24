@@ -4,7 +4,7 @@ import { StakeUiHelperI } from '../../contracts/ethers/StakeUiHelperI';
 import { ethereumProvider } from '../../helpers/ethereum';
 
 export const getStakeUiHelperFactory: () => StakeUiHelperI | null = () => {
-  if (STAKING_CONFIG.STAKE_DATA_PROVIDER) {
+  if (STAKING_CONFIG?.STAKE_DATA_PROVIDER) {
     return StakeUiHelperFactory.connect(STAKING_CONFIG.STAKE_DATA_PROVIDER, ethereumProvider);
   }
 
