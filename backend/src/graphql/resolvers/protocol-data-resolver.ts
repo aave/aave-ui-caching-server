@@ -58,21 +58,15 @@ export class ProtocolDataResolver {
 
   @Subscription(() => [UserReserveData], {
     topics: Topics.USER_DATA_UPDATE,
-    filter: ({ payload, args }: ResolverFilterData<UserDataPayload, UserArgs>) => {
-      return (
-        payload.lendingPoolAddressProvider.toLowerCase() ===
-          args.lendingPoolAddressProvider.toLowerCase() &&
-        payload.userAddress.toLowerCase() === args.userAddress.toLowerCase()
-      );
-    },
+    filter: ({ payload, args }: ResolverFilterData<UserDataPayload, UserArgs>) =>
+      payload.lendingPoolAddressProvider.toLowerCase() ===
+        args.lendingPoolAddressProvider.toLowerCase() &&
+      payload.userAddress.toLowerCase() === args.userAddress.toLowerCase(),
   })
   async userDataUpdate(
-    @Root() root: UserDataPayload,
+    @Root() { userAddress, lendingPoolAddressProvider }: UserDataPayload,
     @Args() args: UserArgs
   ): Promise<UserReserveData[]> {
-    const { userAddress, lendingPoolAddressProvider } = root;
-    console.log(root, args);
-
     return getProtocolUserData(lendingPoolAddressProvider, userAddress, false);
   }
 }
