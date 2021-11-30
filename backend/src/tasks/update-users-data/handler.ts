@@ -36,9 +36,9 @@ export const handler = async (lendingPoolAddressProvider: string) => {
     const blockContext = await getBlockContext(lendingPoolAddressProvider);
     if (blockContext.shouldExecute) {
       const poolContracts = poolContractsState.get(lendingPoolAddressProvider);
-      console.log(
-        `${poolContracts.lendingPoolContract.address}: parsing transfer events via Alchemy in blocks ${blockContext.lastSeenBlock} - ${blockContext.currentBlock}`
-      );
+      // console.log(
+      //   `${poolContracts.lendingPoolContract.address}: parsing transfer events via Alchemy in blocks ${blockContext.lastSeenBlock} - ${blockContext.currentBlock}`
+      // );
 
       const [usersToUpdate, usersWithUsageAsCollateralChange] = await Promise.all([
         getUsersFromLogs(
@@ -52,20 +52,19 @@ export const handler = async (lendingPoolAddressProvider: string) => {
           blockContext.currentBlock
         ),
       ]);
+      // console.log('usersToUpdate', usersToUpdate);
+      // console.log('usersWithUsageAsCollateralChange', usersWithUsageAsCollateralChange);
 
-      console.log('usersToUpdate', usersToUpdate);
-      console.log('usersWithUsageAsCollateralChange', usersWithUsageAsCollateralChange);
-
-      console.log(
-        `${lendingPoolAddressProvider}: Events tracked: ${
-          usersToUpdate.length + usersWithUsageAsCollateralChange.length
-        }`
-      );
+      // console.log(
+      //   `${lendingPoolAddressProvider}: Events tracked: ${
+      //     usersToUpdate.length + usersWithUsageAsCollateralChange.length
+      //   }`
+      // );
       if (usersToUpdate.length || usersWithUsageAsCollateralChange.length) {
         const uniqueUsersToUpdate = [
           ...new Set([...usersToUpdate, ...usersWithUsageAsCollateralChange]),
         ];
-        console.log(`${lendingPoolAddressProvider}: Users to update ${uniqueUsersToUpdate.length}`);
+        // console.log(`${lendingPoolAddressProvider}: Users to update ${uniqueUsersToUpdate.length}`);
         await Promise.all(
           uniqueUsersToUpdate.map(
             async (user) =>

@@ -53,7 +53,7 @@ export const getUsersFromLogs = async (
     topics: topics.map((t) => utils.id(t)),
     address: reservesList,
   });
-  const users: string[] = [];
+  const users = new Set<string>();
   rawLogs.forEach((data) => {
     const logs = alchemyWeb3Provider.eth.abi.decodeLog(
       [
@@ -71,16 +71,8 @@ export const getUsersFromLogs = async (
       '',
       [data.topics[1], data.topics[2]]
     );
-    if (canPushIntoUser(users, logs.from)) {
-      users.push(logs.from);
-    }
-    if (canPushIntoUser(users, logs.to)) {
-      users.push(logs.to);
-    }
+    users.add(logs.from);
+    users.add(logs.to);
   });
-  return users;
+  return [...users].filter((address) => address !== ethers.constants.AddressZero);
 };
-
-// can be 2 in the same block!
-const canPushIntoUser = (users: string[], address: string) =>
-  address !== ethers.constants.AddressZero && !users.find((c) => c === address);
