@@ -95,6 +95,14 @@ entries = collection(
             command=["npm", "run", "job:update-general-reserves-data"],
         ),
         *mk_backend_entries(
+            name="reserve-incentives",
+            command=["npm", "run", "job:update-reserve-incentives-data"],
+        ),
+        *mk_backend_entries(
+            name="user-incentives",
+            command=["npm", "run", "job:update-users-incentives-data"],
+        ),
+        *mk_backend_entries(
             name="user-data-loader",
             command=["npm", "run", "job:update-users-data"],
         ),
