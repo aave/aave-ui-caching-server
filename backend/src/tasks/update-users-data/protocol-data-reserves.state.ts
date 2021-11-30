@@ -28,12 +28,12 @@ export const fetchAndAdd = async (lendingPoolAddressProvider: string) => {
 export const watch = async (lendingPoolAddressProvider: string) => {
   while (true) {
     try {
-      console.log('WATCHER - Fetching new reserves lists', lendingPoolAddressProvider);
+      // console.log('WATCHER - Fetching new reserves lists', lendingPoolAddressProvider);
       const reservesList = await fetchAndAdd(lendingPoolAddressProvider);
-      console.log('WATCHER - Fetched new reserves lists', {
-        lendingPoolAddressProvider,
-        reservesList,
-      });
+      // console.log('WATCHER - Fetched new reserves lists', {
+      //   lendingPoolAddressProvider,
+      //   reservesList,
+      // });
       await sleep(RESERVES_LIST_VALIDITY_INTERVAL);
     } catch (error) {
       console.error(
