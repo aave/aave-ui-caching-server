@@ -20,4 +20,4 @@ export const setExpireDataInRedis = async (
 };
 
 export const getExpireDataInRedis = async (key: string): Promise<string | null> =>
-  await cacheRedis.get(key);
+  cacheRedis.get(key);

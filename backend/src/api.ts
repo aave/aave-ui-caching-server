@@ -1,35 +1,50 @@
-import { ApolloServer } from 'apollo-server';
+import { ApolloServer } from 'apollo-server-express';
 import 'reflect-metadata';
 import { buildSchema, NonEmptyArray } from 'type-graphql';
-import { HealthResolver, ProtocolDataResolver, StakeDataResolver } from './graphql/resolvers';
+import {
+  HealthResolver,
+  ProtocolDataResolver,
+  IncentivesDataResolver,
+  StakeDataResolver,
+} from './graphql/resolvers';
 import { getPubSub } from './pubsub';
 import { isStakeEnabled } from './tasks/task-helpers';
+import express from 'express';
+import * as WebSocket from 'ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
 
 const PORT = process.env.PORT || 3000;
 
 async function bootstrap() {
   const resolvers: NonEmptyArray<Function> | NonEmptyArray<string> = isStakeEnabled()
-    ? [ProtocolDataResolver, HealthResolver, StakeDataResolver]
-    : [ProtocolDataResolver, HealthResolver];
+    ? [ProtocolDataResolver, HealthResolver, IncentivesDataResolver, StakeDataResolver]
+    : [ProtocolDataResolver, IncentivesDataResolver, HealthResolver];
 
   const schema = await buildSchema({
     resolvers,
     pubSub: getPubSub(),
   });
 
+  const app = express();
+
   // Create the GraphQL server
   const server = new ApolloServer({
     schema,
-    playground: true,
-    subscriptions: { keepAlive: 1000 * 20 },
   });
+
+  await server.start();
+
+  server.applyMiddleware({ app });
 
   try {
     // Start the server
-    const { url, subscriptionsUrl } = await server.listen(PORT);
-    console.log(
-      `Server is running, GraphQL Playground available at ${url}, and subscriptions are on ${subscriptionsUrl}`
-    );
+    const server = await app.listen(PORT, () => {
+      const wsServer = new WebSocket.Server({
+        server,
+        path: '/graphql',
+      });
+      useServer({ schema }, wsServer);
+    });
   } catch (e) {
     console.error('Apollo server exited with', e);
     process.exit(1);

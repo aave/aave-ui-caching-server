@@ -1,4 +1,4 @@
-version: '3.5'
+version: "3.5"
 
 x-common-environment: &common-environment
   image: node:14
@@ -7,34 +7,10 @@ x-common-environment: &common-environment
     - ./backend:/app
   restart: on-failure
   environment:
-    REDIS_HOST: 'redis'
+    REDIS_HOST: "redis"
 
-    NETWORK: 'mainnet'
-    PROTOCOL_ADDRESSES_PROVIDER_ADDRESSES: '0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5,0xacc030ef66f9dfeae9cbb0cd1b25654b82cfa8d5'
-    PROTOCOLS_WITH_INCENTIVES_ADDRESSES: '0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5'
-    POOL_UI_DATA_PROVIDER_ADDRESS: '0xaC453D3DC9840A44a20c763F76641d56771C2B8f'
-    AAVE_TOKEN_ADDRESS: '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9'
-    ABPT_TOKEN: '0x41A08648C3766F9F9d85598fF102a08f4ef84F84'
-    STK_AAVE_TOKEN_ADDRESS: '0x4da27a545c0c5B758a6BA100e3a049001de870f5'
-    STK_ABPT_TOKEN_ADDRESS: '0xa1116930326D21fB917d5A27F1E9943A9595fb47'
-    STAKE_DATA_PROVIDER: '0xc57450af527d10Fe182521AB39C1AD23c1e1BaDE'
-    STAKE_DATA_POOLING_INTERVAL: '1'
-    BLOCK_NUMBER_POOLING_INTERVAL: '1'
-    RPC_URL: ${RPC_URL}
-    RPC_MAX_TIMEOUT: '5'
-    BACKUP_RPC_URLS: ''
-    USERS_DATA_POOLING_INTERVAL: '0.5'
-    GENERAL_RESERVES_DATA_POOLING_INTERVAL: '0.5'
-
-    #    NETWORK: "polygon"
-    #    BLOCK_NUMBER_POOLING_INTERVAL: "5"
-    #    PROTOCOL_ADDRESSES_PROVIDER_ADDRESSES: "0xd05e3E715d945B59290df0ae8eF85c1BdB684744"
-    #    PROTOCOLS_WITH_INCENTIVES_ADDRESSES: "0xd05e3E715d945B59290df0ae8eF85c1BdB684744"
-    #    POOL_UI_DATA_PROVIDER_ADDRESS: "0x47e300dDd1d25447482E2F7e5a5a967EA2DA8634"
-    #    STK_AAVE_TOKEN_ADDRESS: 'FILL_IN'
-    #    RPC_URL: ${RPC_URL}
-    #    RPC_MAX_TIMEOUT: 1000
-    #    BACKUP_RPC_URLS: ''
+    CHAIN_ID: "1"
+    RPC_URL: "${RPC_URL}"
 
   depends_on:
     - redis
@@ -44,27 +20,35 @@ services:
     <<: *common-environment
     ports:
       - 3000:3000
-    command: 'npm run start'
+    command: "npm run start"
 
   general_reserves_data_loader:
     <<: *common-environment
-    command: 'npm run job:update-general-reserves-data'
+    command: "npm run job:update-general-reserves-data"
+
+  reserves_incentives_data_loader:
+    <<: *common-environment
+    command: "npm run job:update-reserve-incentives-data"
+
+  user_incentives_data_loader:
+    <<: *common-environment
+    command: "npm run job:update-users-incentives-data"
 
   user_data_loader:
     <<: *common-environment
-    command: 'npm run job:update-users-data'
+    command: "npm run job:update-users-data"
 
   stake_user_ui_data_loader:
     <<: *common-environment
-    command: 'npm run job:update-stake-user-ui-data'
+    command: "npm run job:update-stake-user-ui-data"
 
   stake_general_ui_data_loader:
     <<: *common-environment
-    command: 'npm run job:update-stake-general-ui-data'
+    command: "npm run job:update-stake-general-ui-data"
 
   block_number_loader:
     <<: *common-environment
-    command: 'npm run job:update-block-number'
+    command: "npm run job:update-block-number"
 
   redis:
-    image: redis:alpine
+    image: redis:6-alpine

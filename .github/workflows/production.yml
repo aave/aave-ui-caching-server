@@ -6,16 +6,6 @@ concurrency:
 
 on:
   workflow_dispatch:
-    inputs:
-      deploy_networks:
-        required: false
-        description: Specify which environments to deploy (defaults to all)
-        default: 'mainnet,polygon,avalanche'
-
-env:
-  GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-  GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
-  GKE_CLUSTER_REGION: ${{ secrets.GKE_CLUSTER_REGION }}
 
 jobs:
   build: 
@@ -29,69 +19,54 @@ jobs:
         name: Build image
         id: build
 
-  deploy_mainnet:
+  deploy_production:
     runs-on: ubuntu-latest
     environment: production
     needs: build
-    if: ${{ contains(github.event.inputs.deploy_networks, 'mainnet') }}
     container: 
       image: registry.gitlab.com/aave-tech/k8s:63f618c0
       credentials:
         username: github-actions
         password: ${{ secrets.KUBE_IMAGE_PULL }}
-    env:
-      RECIPE: base+mainnet
-      DOMAIN: cache-api-mainnet.aave.com
-      NAMESPACE: cache-mainnet
-      IMAGE: ${{ needs.build.outputs.image_name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - CHAIN_ID: "1"
+            CHAIN_NAME: mainnet
+          - CHAIN_ID: "137"
+            CHAIN_NAME: polygon
+          - CHAIN_ID: "43114"
+            CHAIN_NAME: avalanche
     steps:
       - uses: actions/checkout@v2
       
-      - name: Deploy
-        uses: ./.github/actions/deploy-prod
+      - name: GCP Auth
+        uses: google-github-actions/auth@v0.4.0
         with:
-          MAINNET_RPC: ${{ secrets.MAINNET_RPC }}
-
-  deploy_polygon:
-    runs-on: ubuntu-latest
-    environment: production
-    needs: build
-    if: ${{ contains(github.event.inputs.deploy_networks, 'polygon') }}
-    container: 
-      image: registry.gitlab.com/aave-tech/k8s:63f618c0
-      credentials:
-        username: github-actions
-        password: ${{ secrets.KUBE_IMAGE_PULL }}
-    env:
-      RECIPE: base+polygon
-      DOMAIN: cache-api-polygon.aave.com
-      NAMESPACE: cache-polygon
-      IMAGE: ${{ needs.build.outputs.image_name }}
-    steps:
-      - uses: actions/checkout@v2
-      
-      - name: Deploy
-        uses: ./.github/actions/deploy-prod
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v0.4.0
         with:
-          POLYGON_RPC: ${{ secrets.POLYGON_RPC }}
+          cluster_name: ${{ secrets.GKE_CLUSTER }}
+          location: ${{ secrets.GKE_CLUSTER_REGION }}
 
-  deploy_avalanche:
-    runs-on: ubuntu-latest
-    environment: production
-    if: ${{ contains(github.event.inputs.deploy_networks, 'avalanche') }}
-    needs: build
-    container: 
-      image: registry.gitlab.com/aave-tech/k8s:63f618c0
-      credentials:
-        username: github-actions
-        password: ${{ secrets.KUBE_IMAGE_PULL }}
-    env:
-      RECIPE: base+avalanche
-      DOMAIN: cache-api-avalanche.aave.com
-      NAMESPACE: cache-avalanche
-      IMAGE: ${{ needs.build.outputs.image_name }}
-    steps:
-      - uses: actions/checkout@v2
+      - name: Render kdsl resources into yaml
+        env: 
+          MAINNET_RPC: '${{ secrets.MAINNET_RPC }}'
+          POLYGON_RPC: '${{ secrets.POLYGON_RPC }}'
+          RECIPE: "base+chain${{ matrix.CHAIN_ID }}"
+          DOMAIN: cache-api-${{ matrix.CHAIN_NAME }}.aave.com
+          CHAIN_ID: ${{ matrix.CHAIN_ID }}
+          NAMESPACE: cache-${{ matrix.CHAIN_NAME }}
+          IMAGE: ${{ needs.build.outputs.image_name }}
+        run: |
+          cd k8s/
+          kubectl config set-context --current --namespace=${{ env.NAMESPACE }}
+          python3 main.py > ../rendered.yml
       
-      - name: Deploy
-        uses: ./.github/actions/deploy-prod
+      - name: Apply k8s resources
+        run: |
+          kubectl apply -f rendered.yml --dry-run=server
+          kubectl apply -f rendered.yml
+          kubectl rollout status --watch --timeout=30s deploy/api

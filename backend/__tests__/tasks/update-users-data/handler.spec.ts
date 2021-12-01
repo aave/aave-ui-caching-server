@@ -31,15 +31,6 @@ jest.mock('../../../src/pubsub', () => ({
   pushUpdatedUserReserveDataToSubscriptions: jest.fn(),
 }));
 
-const getIncentivesControllerAddressRpcMock = 'getIncentivesControllerAddressRpcMock';
-
-jest.mock('../../../src/services/pool-data/rpc', () => ({
-  __esModule: true,
-  getIncentivesControllerAddressRpc: jest
-    .fn()
-    .mockImplementation(() => getIncentivesControllerAddressRpcMock),
-}));
-
 const getProtocolDataMock = {
   reserves: [
     {
@@ -144,7 +135,7 @@ describe('update-user-data', () => {
       await testStartUp();
       const spy = jest.spyOn(ethereum, 'getUsersFromLogs');
       await handler(poolAddress);
-      expect(spy).toHaveBeenCalledTimes(2);
+      expect(spy).toHaveBeenCalledTimes(1);
       expect(spy.mock.calls[0]).toEqual([
         [
           'aTokenAddressMock1',
@@ -156,13 +147,6 @@ describe('update-user-data', () => {
         ],
         1,
         2,
-      ]);
-
-      expect(spy.mock.calls[1]).toEqual([
-        ['getIncentivesControllerAddressRpcMock'],
-        1,
-        2,
-        ['RewardsClaimed(address,address,address,uint256)'],
       ]);
     });
 

@@ -1,33 +1,32 @@
 import { ethers } from 'ethers';
-import { PROTOCOLS_WITH_INCENTIVES_ADDRESSES } from '../../config';
 import { ILendingPool } from '../../contracts/ethers/ILendingPool';
 import { ILendingPoolAddressesProviderFactory } from '../../contracts/ethers/ILendingPoolAddressesProviderFactory';
 import { ILendingPoolFactory } from '../../contracts/ethers/ILendingPoolFactory';
-import { getIncentivesControllerAddressRpc } from '../../services/pool-data';
 
 interface PoolContracts {
-  poolAddress: string;
-  incentiveAddress: string;
+  lendingPoolAddressProvider: string;
   lendingPoolContract: ILendingPool;
 }
 
 let poolContracts: PoolContracts[] = [];
 
-export const get = (poolAddress: string) => {
-  const index = poolContracts.findIndex((pools) => pools.poolAddress === poolAddress);
+export const get = (lendingPoolAddressProvider: string) => {
+  const index = poolContracts.findIndex(
+    (pools) => pools.lendingPoolAddressProvider === lendingPoolAddressProvider
+  );
   if (index > -1) {
     return poolContracts[index];
   }
 
-  throw new Error(`Can not find contracts for pool address - ${poolAddress}`);
+  throw new Error(`Can not find contracts for pool address - ${lendingPoolAddressProvider}`);
 };
 
 export const init = async (
-  poolAddress: string,
+  lendingPoolAddressProvider: string,
   ethereumProvider: ethers.providers.JsonRpcProvider
 ) => {
   const lendingPoolAddressesProviderContract = ILendingPoolAddressesProviderFactory.connect(
-    poolAddress,
+    lendingPoolAddressProvider,
     ethereumProvider
   );
 
@@ -36,14 +35,12 @@ export const init = async (
     ethereumProvider
   );
 
-  const incentiveAddress = PROTOCOLS_WITH_INCENTIVES_ADDRESSES.includes(poolAddress)
-    ? await getIncentivesControllerAddressRpc()
-    : ethers.constants.AddressZero;
-
-  add({ poolAddress, lendingPoolContract, incentiveAddress });
+  add({ lendingPoolAddressProvider, lendingPoolContract });
 };
 
 export const add = (context: PoolContracts) => {
-  poolContracts = poolContracts.filter((c) => c.poolAddress !== context.poolAddress);
+  poolContracts = poolContracts.filter(
+    (c) => c.lendingPoolAddressProvider !== context.lendingPoolAddressProvider
+  );
   poolContracts.push(context);
 };

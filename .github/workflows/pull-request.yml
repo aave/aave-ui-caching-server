@@ -1,15 +1,15 @@
 name: On Pull Request
 
 concurrency:
-  group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
+  group: "${{ github.workflow }}-${{ github.head_ref || github.ref }}"
   cancel-in-progress: true
 
 on:
-  pull_request: 
+  pull_request:
     types: [opened, synchronize, reopened]
 
 jobs:
-  build: 
+  build:
     runs-on: ubuntu-latest
     outputs:
       image_name: ${{ steps.build.outputs.image_name }}
@@ -32,39 +32,45 @@ jobs:
     runs-on: ubuntu-latest
     environment: preview
     needs: build
-    container: 
+    container:
       image: registry.gitlab.com/aave-tech/k8s:63f618c0
       credentials:
         username: github-actions
         password: ${{ secrets.KUBE_IMAGE_PULL }}
+    strategy:
+      fail-fast: false
+      matrix:
+        CHAIN_ID: ["1", "137", "43114"]
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Set k8s namespace
         shell: bash
-        run:
-          echo "NAMESPACE=cache-${REF_NAME,,}" | tr -c '[:alnum:]-=\n' '-' >>${GITHUB_ENV}
+        run: echo "NAMESPACE=cache-${NS_SUFFIX,,}" | tr -c '[:alnum:]-=\n' '-' >>${GITHUB_ENV}
         env:
-          REF_NAME: '${{ github.head_ref }}'
-      
+          NS_SUFFIX: "${{ github.head_ref }}-${{ matrix.CHAIN_ID }}"
+
       - name: Render kdsl resources into yaml
-        env: 
-          IMAGE: '${{ needs.build.outputs.image_name }}'
-          RECIPE: base+mainnet
-          DOMAIN: '${{ env.NAMESPACE }}.aaw.fi'
-          MAINNET_RPC: '${{ secrets.MAINNET_RPC }}'
+        env:
+          IMAGE: "${{ needs.build.outputs.image_name }}"
+          RECIPE: "base+chain${{ matrix.CHAIN_ID }}"
+          DOMAIN: "${{ env.NAMESPACE }}.aaw.fi"
+          CHAIN_ID: ${{ matrix.CHAIN_ID }}
+          POLYGON_RPC: "${{ secrets.POLYGON_RPC }}"
+          MAINNET_RPC: "${{ secrets.MAINNET_RPC }}"
         run: |
           cd k8s/
           python3 main.py > ../rendered.yml
-      
+
       - name: Set up kubeconfig
         run: |
           mkdir -p ~/.kube
           echo "${{ secrets.DEV_KUBECONFIG }}" > ~/.kube/config
-      
+
       - name: Apply k8s resources
         run: |
           kubectl apply -f rendered.yml
+          kubectl -n ${{ env.NAMESPACE }} rollout status --watch --timeout=30s deploy/api
 
       - uses: actions/github-script@v5
         if: ${{ github.event.action == 'opened' || github.event.action == 'reopened' }}
@@ -74,5 +80,5 @@ jobs:
               issue_number: context.payload.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'Preview link: https://${{ env.NAMESPACE }}.aaw.fi/'
+              body: 'Preview link for chain ${{ matrix.CHAIN_ID }}: https://${{ env.NAMESPACE }}.aaw.fi/'
             })

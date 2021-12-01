@@ -22,7 +22,7 @@ describe('poolContractsState', () => {
 
     it('should return pool contracts if defined', () => {
       const _object = {
-        poolAddress,
+        lendingPoolAddressProvider: poolAddress,
         incentiveAddress: '123',
         lendingPoolContract: {} as any,
       };
@@ -34,7 +34,7 @@ describe('poolContractsState', () => {
   describe('add', () => {
     it('should add a pool contract', () => {
       const _object = {
-        poolAddress,
+        lendingPoolAddressProvider: poolAddress,
         incentiveAddress: '123',
         lendingPoolContract: {} as any,
       };
@@ -44,13 +44,13 @@ describe('poolContractsState', () => {
 
     it('should add a pool contracts', () => {
       const _object = {
-        poolAddress,
+        lendingPoolAddressProvider: poolAddress,
         incentiveAddress: '123',
         lendingPoolContract: {} as any,
       };
 
       const _object2 = {
-        poolAddress: '123',
+        lendingPoolAddressProvider: '123',
         incentiveAddress: '123',
         lendingPoolContract: {} as any,
       };
@@ -62,7 +62,7 @@ describe('poolContractsState', () => {
 
     it('should add only 1 pool contracts', () => {
       const _object = {
-        poolAddress,
+        lendingPoolAddressProvider: poolAddress,
         incentiveAddress: '123',
         lendingPoolContract: {} as any,
       };
@@ -116,7 +116,7 @@ describe('poolContractsState', () => {
 
     it('should add to pool contracts', async () => {
       await init(poolAddress, ethereumProviderMock);
-      expect(get(poolAddress).poolAddress).toEqual(poolAddress);
+      expect(get(poolAddress).lendingPoolAddressProvider).toEqual(poolAddress);
     });
   });
 });
