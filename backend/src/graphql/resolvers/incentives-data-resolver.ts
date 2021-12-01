@@ -1,4 +1,3 @@
-import { Denominations } from '@aave/contract-helpers';
 import {
   Args,
   ArgsType,
@@ -13,21 +12,13 @@ import { IncentivesDataPayload, Topics, UserIncentivesDataPayload } from '../../
 import { getPoolIncentives, getUserPoolIncentives } from '../../services/incentives-data';
 import { ReserveIncentivesData } from '../object-types/incentives';
 import { UserIncentivesData } from '../object-types/user-incentives';
-import { IsDenominationOrNull, IsEthAddress, IsEthAddressOrNull } from '../validators';
+import { IsEthAddress } from '../validators';
 
 @ArgsType()
 class PoolArgs {
   @Field()
   @IsEthAddress()
   lendingPoolAddressProvider: string;
-
-  @Field()
-  @IsEthAddressOrNull()
-  chainlinkFeedsRegistry?: string;
-
-  @Field()
-  @IsDenominationOrNull()
-  quote?: Denominations;
 }
 
 @ArgsType()
@@ -41,9 +32,9 @@ class UserArgs extends PoolArgs {
 export class IncentivesDataResolver {
   @Query(() => [ReserveIncentivesData])
   async reservesIncentives(
-    @Args() { lendingPoolAddressProvider, chainlinkFeedsRegistry, quote }: PoolArgs
+    @Args() { lendingPoolAddressProvider }: PoolArgs
   ): Promise<ReserveIncentivesData[]> {
-    return getPoolIncentives({ lendingPoolAddressProvider, chainlinkFeedsRegistry, quote });
+    return getPoolIncentives(lendingPoolAddressProvider);
   }
 
   @Subscription(() => [ReserveIncentivesData], {

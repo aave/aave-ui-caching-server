@@ -2,24 +2,20 @@ import { getBlockNumber } from '../../helpers/ethereum';
 import { createHash } from '../../helpers/utils';
 import { pushUpdatedPoolIncentivesDataToSubscriptions } from '../../pubsub';
 import { getPoolIncentivesDataRedis, setPoolIncentivesDataRedis } from '../../redis';
-import { getPoolIncentivesRPC, IncentivesRPCType } from '../../services/incentives-data';
+import { getPoolIncentivesRPC } from '../../services/incentives-data';
 import * as lastSeenBlockState from '../last-seen-block.state';
 import { getBlockContext } from '../task-helpers';
 
 let _running = false;
 export const running = () => _running;
 
-export const handler = async ({
-  lendingPoolAddressProvider,
-  chainlinkFeedsRegistry,
-  quote,
-}: IncentivesRPCType) => {
+export const handler = async (lendingPoolAddressProvider) => {
   try {
     const incentivesKey = `incentives-${lendingPoolAddressProvider}`;
     const blockContext = await getBlockContext(incentivesKey);
     if (blockContext.shouldExecute) {
       const [newData, redisPoolIncentivesData] = await Promise.all([
-        getPoolIncentivesRPC({ lendingPoolAddressProvider, chainlinkFeedsRegistry, quote }),
+        getPoolIncentivesRPC(lendingPoolAddressProvider),
         getPoolIncentivesDataRedis(incentivesKey),
       ]);
       const newDataHash = createHash(newData);

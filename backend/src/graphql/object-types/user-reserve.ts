@@ -22,4 +22,7 @@ export class UserReserveData {
 
   @Field()
   stableBorrowLastUpdateTimestamp: number;
+
+  @Field()
+  userEmodeCategoryId: number;
 }

@@ -1,4 +1,3 @@
-import { Denominations } from '@aave/contract-helpers';
 import { CONFIG } from '../../config';
 import { runTask } from '../task-helpers';
 import { handler, running, startUp } from './handler';
@@ -20,12 +19,7 @@ async function updateReservesIncentivesData(
   await runTask({
     runEvery: poolingInterval,
     startupHandler: () => startUp(lendingPoolAddressProvider),
-    mainHandler: () =>
-      handler({
-        lendingPoolAddressProvider,
-        chainlinkFeedsRegistry: CONFIG.CHAINLINK_FEEDS_REGISTRY,
-        quote: Denominations[CONFIG.CHAINLINK_FEED_QUOTE],
-      }),
+    mainHandler: () => handler(lendingPoolAddressProvider),
     runningHandler: running,
   });
 }

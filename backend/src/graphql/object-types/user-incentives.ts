@@ -1,24 +1,42 @@
 import { Field, ObjectType } from 'type-graphql';
 
 @ObjectType()
-export class TokenIncentivesUserData {
+export class UserRewardInfo {
   @Field()
-  tokenIncentivesUserIndex: string;
+  rewardTokenSymbol: string;
 
   @Field()
-  userUnclaimedRewards: string;
-
-  @Field()
-  tokenAddress: string;
+  rewardOracleAddress: string;
 
   @Field()
   rewardTokenAddress: string;
 
   @Field()
+  userUnclaimedRewards: string;
+
+  @Field()
+  tokenIncentivesUserIndex: string;
+
+  @Field()
+  rewardPriceFeed: string;
+
+  @Field()
+  priceFeedDecimals: number;
+
+  @Field()
   rewardTokenDecimals: number;
+}
+
+@ObjectType()
+export class UserIncentiveData {
+  @Field()
+  tokenAddress: string;
 
   @Field()
   incentiveControllerAddress: string;
+
+  @Field(() => [UserRewardInfo])
+  userRewardsInformation: UserRewardInfo[];
 }
 
 @ObjectType()
@@ -26,12 +44,12 @@ export class UserIncentivesData {
   @Field()
   underlyingAsset: string;
 
-  @Field(() => TokenIncentivesUserData)
-  aTokenIncentivesUserData: TokenIncentivesUserData;
+  @Field(() => UserIncentiveData)
+  aTokenIncentivesUserData: UserIncentiveData;
 
-  @Field(() => TokenIncentivesUserData)
-  vTokenIncentivesUserData: TokenIncentivesUserData;
+  @Field(() => UserIncentiveData)
+  vTokenIncentivesUserData: UserIncentiveData;
 
-  @Field(() => TokenIncentivesUserData)
-  sTokenIncentivesUserData: TokenIncentivesUserData;
+  @Field(() => UserIncentiveData)
+  sTokenIncentivesUserData: UserIncentiveData;
 }
