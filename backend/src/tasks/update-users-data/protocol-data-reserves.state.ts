@@ -29,7 +29,7 @@ export const watch = async (lendingPoolAddressProvider: string) => {
   while (true) {
     try {
       // console.log('WATCHER - Fetching new reserves lists', lendingPoolAddressProvider);
-      const reservesList = await fetchAndAdd(lendingPoolAddressProvider);
+      await fetchAndAdd(lendingPoolAddressProvider);
       // console.log('WATCHER - Fetched new reserves lists', {
       //   lendingPoolAddressProvider,
       //   reservesList,

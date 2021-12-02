@@ -7,7 +7,7 @@ import {
 } from '@aave/contract-helpers';
 import { CONFIG } from '../../config';
 import { ProtocolData } from '../../graphql/object-types/reserve';
-import { UserReserveData } from '../../graphql/object-types/user-reserve';
+import { UserReserveData, UserReservesData } from '../../graphql/object-types/user-reserve';
 import { ethereumProvider } from '../../helpers/ethereum';
 
 let uiPoolDataProvider: UiPoolDataProviderInterface;
@@ -48,17 +48,20 @@ export const getProtocolDataRPC = async (
 export const getProtocolUserDataRPC = async (
   lendingPoolAddressProvider: string,
   userAddress: string
-): Promise<UserReserveData[]> => {
+): Promise<UserReservesData> => {
   const uiPoolProvider = getPoolDataProvider();
-  const userReservesUnfiltered: UserReserveDataHumanized[] =
+  const {
+    userReserves: userReservesUnfiltered,
+    userEmodeCategoryId,
+  }: { userReserves: UserReserveDataHumanized[]; userEmodeCategoryId: number } =
     await uiPoolProvider.getUserReservesHumanized(lendingPoolAddressProvider, userAddress);
 
-  const userReserves: UserReserveData[] = userReservesUnfiltered.filter(
+  const userReservesFiltered: UserReserveData[] = userReservesUnfiltered.filter(
     (userReserve) =>
       userReserve.scaledATokenBalance !== '0' ||
       userReserve.scaledVariableDebt !== '0' ||
       userReserve.principalStableDebt !== '0'
   );
 
-  return userReserves;
+  return { userReserves: userReservesFiltered, userEmodeCategoryId };
 };

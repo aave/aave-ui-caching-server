@@ -1,21 +1,21 @@
-import { UserReserveData } from '../graphql/object-types/user-reserve';
+import { UserReservesData } from '../graphql/object-types/user-reserve';
 import { jsonParse } from '../helpers/utils';
 import { getExpireDataInRedis, setExpireDataInRedis } from './shared';
 
 export const setProtocolUserDataRedis = async (
   poolAddress: string,
   userAddress: string,
-  data: UserReserveData[]
+  data: UserReservesData
 ) => setExpireDataInRedis(`${poolAddress}${userAddress}`, JSON.stringify(data));
 
 export const getProtocolUserDataRedis = async (
   poolAddress: string,
   userAddress: string
-): Promise<UserReserveData[] | null> => {
+): Promise<UserReservesData | null> => {
   const userDataCachedStr = await getExpireDataInRedis(`${poolAddress}${userAddress}`);
 
   if (userDataCachedStr) {
-    return jsonParse<UserReserveData[]>(userDataCachedStr);
+    return jsonParse<UserReservesData>(userDataCachedStr);
   }
 
   return null;
