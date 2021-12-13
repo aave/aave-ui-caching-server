@@ -31,13 +31,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - CHAIN_ID: "1"
-            CHAIN_NAME: mainnet
-          - CHAIN_ID: "137"
-            CHAIN_NAME: polygon
-          - CHAIN_ID: "43114"
-            CHAIN_NAME: avalanche
+        CHAIN_ID:
+          - "1"
+          - "137"
+          - "43114"
     steps:
       - uses: actions/checkout@v2
       
@@ -56,9 +53,9 @@ jobs:
           MAINNET_RPC: '${{ secrets.MAINNET_RPC }}'
           POLYGON_RPC: '${{ secrets.POLYGON_RPC }}'
           RECIPE: "base+chain${{ matrix.CHAIN_ID }}"
-          DOMAIN: cache-api-${{ matrix.CHAIN_NAME }}.aave.com
+          DOMAIN: cache-api-${{ matrix.CHAIN_ID }}.aave.com
           CHAIN_ID: ${{ matrix.CHAIN_ID }}
-          NAMESPACE: cache-${{ matrix.CHAIN_NAME }}
+          NAMESPACE: cache-${{ matrix.CHAIN_ID }}
           IMAGE: ${{ needs.build.outputs.image_name }}
         run: |
           cd k8s/
