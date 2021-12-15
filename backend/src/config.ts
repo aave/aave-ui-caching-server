@@ -87,6 +87,7 @@ const _STAKE_CONFIG = {
 
 export const CONFIG = CONFIGS[CHAIN_ID];
 
-export const STAKING_CONFIG = CHAIN_ID === 1 ? _STAKE_CONFIG : undefined;
+export const STAKING_CONFIG: typeof _STAKE_CONFIG | undefined =
+  CHAIN_ID === 1 ? _STAKE_CONFIG : undefined;
 
 export const RESERVES_LIST_VALIDITY_INTERVAL = 60 * 5 * 1000;

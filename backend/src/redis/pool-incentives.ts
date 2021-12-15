@@ -10,7 +10,7 @@ export interface RedisPoolIncentivesData {
 export const setPoolIncentivesDataRedis = async (
   key: string,
   data: RedisPoolIncentivesData
-): Promise<string> => setExpireDataInRedis(key, JSON.stringify(data));
+): Promise<string | null> => setExpireDataInRedis(key, JSON.stringify(data));
 
 export const getPoolIncentivesDataRedis = async (
   key: string

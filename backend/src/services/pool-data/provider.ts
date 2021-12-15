@@ -49,10 +49,7 @@ export async function getProtocolUserData(
 ): Promise<UserReservesData> {
   if (cacheFirst) {
     try {
-      const userReserves: UserReservesData = await getProtocolUserDataRedis(
-        lendingPoolAddressProvider,
-        userAddress
-      );
+      const userReserves = await getProtocolUserDataRedis(lendingPoolAddressProvider, userAddress);
       if (userReserves) {
         return userReserves;
       }

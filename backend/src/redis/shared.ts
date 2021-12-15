@@ -15,7 +15,7 @@ export const setExpireDataInRedis = async (
   key: string,
   value: string,
   seconds = 60
-): Promise<string> => {
+): Promise<string | null> => {
   return await cacheRedis.set(key, value, 'EX', seconds);
 };
 

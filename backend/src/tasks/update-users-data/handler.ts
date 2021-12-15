@@ -27,7 +27,7 @@ const getUsersWithUsageAsCollateralChange = async (
     ),
   ]);
   return [...disabledAsCollateralEvents, ...enabledAsColteralEvents].map(
-    (event) => event.args.user
+    (event) => event?.args?.user
   );
 };
 
