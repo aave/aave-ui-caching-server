@@ -1,7 +1,8 @@
 version: "3.5"
 
 x-common-environment: &common-environment
-  image: node:14
+  image: node:16
+  user: node
   working_dir: /app
   volumes:
     - ./backend:/app

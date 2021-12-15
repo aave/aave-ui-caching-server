@@ -15,9 +15,9 @@
     "job:update-reserve-incentives-data": "ts-node ./src/tasks/update-reserve-incentives-data/run.ts"
   },
   "dependencies": {
-    "@aave/contract-helpers": "0.26.3-98b357c5dca857a8d50b8de4678b3adcc84b40a2.0+98b357c",
+    "@aave/contract-helpers": "0.27.2-441376d630df05a48a2f56b84b928c01b07f7f1c.0+441376d",
     "@aave/protocol-js": "^3.0.0",
-    "@alch/alchemy-web3": "^1.1.8",
+    "@alch/alchemy-web3": "^1.1.9",
     "apollo-server-express": "^3.5.0",
     "class-validator": "^0.13.1",
     "ethers": "^5.3.1",
@@ -25,17 +25,17 @@
     "graphql": "^15.5.0",
     "graphql-redis-subscriptions": "^2.4.2",
     "graphql-ws": "^5.5.5",
-    "ioredis": "^4.27.6",
+    "ioredis": "^4.28.2",
     "reflect-metadata": "^0.1.13",
     "type-graphql": "^1.1.1",
     "ws": "^8.3.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.16.0",
-    "@babel/plugin-proposal-decorators": "^7.16.4",
-    "@babel/preset-env": "^7.16.4",
-    "@babel/preset-typescript": "^7.16.0",
-    "@types/ioredis": "^4.28.1",
+    "@babel/core": "^7.16.5",
+    "@babel/plugin-proposal-decorators": "^7.16.5",
+    "@babel/preset-env": "^7.16.5",
+    "@babel/preset-typescript": "^7.16.5",
+    "@types/ioredis": "^4.28.4",
     "@types/jest": "^27.0.3",
     "@types/node": "^14.14.31",
     "@typescript-eslint/eslint-plugin": "^4.27.0",
@@ -44,13 +44,13 @@
     "eslint": "^7.28.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^3.4.0",
-    "husky": "^6.0.0",
-    "jest": "^27.4.2",
+    "husky": "^7.0.4",
+    "jest": "^27.4.5",
     "lint-staged": "^12.1.2",
-    "nodemon": "^2.0.7",
-    "prettier": "^2.5.0",
+    "nodemon": "^2.0.15",
+    "prettier": "^2.5.1",
     "ts-node": "^10.4.0",
-    "typescript": "^4.3.3"
+    "typescript": "^4.5.4"
   },
   "husky": {
     "hooks": {
