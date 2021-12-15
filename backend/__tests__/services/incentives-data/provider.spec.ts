@@ -39,14 +39,14 @@ describe('provider', () => {
 
       const rpcSpy = jest.spyOn(rpc, 'getPoolIncentivesRPC');
 
-      const result = await getPoolIncentives({ lendingPoolAddressProvider });
+      const result = await getPoolIncentives(lendingPoolAddressProvider);
       expect(result).toEqual(getPoolIncentivesRPCMockResponse);
 
       expect(redisGetSpy).toHaveBeenCalledTimes(1);
       expect(redisGetSpy).toHaveBeenCalledWith(incentivesKey);
 
       expect(rpcSpy).toHaveBeenCalledTimes(1);
-      expect(rpcSpy).toHaveBeenCalledWith({ lendingPoolAddressProvider });
+      expect(rpcSpy).toHaveBeenCalledWith(lendingPoolAddressProvider);
 
       expect(redisSetSpy).toHaveBeenCalledTimes(1);
       expect(redisSetSpy).toHaveBeenCalledWith(
@@ -63,7 +63,7 @@ describe('provider', () => {
 
       const rpcSpy = jest.spyOn(rpc, 'getPoolIncentivesRPC');
 
-      const result = await getPoolIncentives({ lendingPoolAddressProvider });
+      const result = await getPoolIncentives(lendingPoolAddressProvider);
       expect(result).toEqual(getPoolIncentivesRPCMockResponse);
 
       expect(redisGetSpy).toHaveBeenCalledTimes(1);

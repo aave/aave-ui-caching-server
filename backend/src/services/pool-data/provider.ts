@@ -1,5 +1,5 @@
 import { ProtocolData } from '../../graphql/object-types/reserve';
-import { UserReserveData } from '../../graphql/object-types/user-reserve';
+import { UserReservesData } from '../../graphql/object-types/user-reserve';
 import { createHash } from '../../helpers/utils';
 import {
   getProtocolDataRedis,
@@ -46,13 +46,10 @@ export async function getProtocolUserData(
   lendingPoolAddressProvider: string,
   userAddress: string,
   cacheFirst = true
-): Promise<UserReserveData[]> {
+): Promise<UserReservesData> {
   if (cacheFirst) {
     try {
-      const userReserves: UserReserveData[] = await getProtocolUserDataRedis(
-        lendingPoolAddressProvider,
-        userAddress
-      );
+      const userReserves = await getProtocolUserDataRedis(lendingPoolAddressProvider, userAddress);
       if (userReserves) {
         return userReserves;
       }
@@ -66,7 +63,7 @@ export async function getProtocolUserData(
     }
   }
 
-  const userReserves: UserReserveData[] = await getProtocolUserDataRPC(
+  const userReserves: UserReservesData = await getProtocolUserDataRPC(
     lendingPoolAddressProvider,
     userAddress
   );

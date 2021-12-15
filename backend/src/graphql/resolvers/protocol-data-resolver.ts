@@ -11,7 +11,7 @@ import {
 import { ProtocolDataPayload, Topics, UserDataPayload } from '../../pubsub';
 import { getProtocolData, getProtocolUserData } from '../../services/pool-data';
 import { ProtocolData } from '../object-types/reserve';
-import { UserReserveData } from '../object-types/user-reserve';
+import { UserReservesData } from '../object-types/user-reserve';
 import { IsEthAddress } from '../validators';
 
 @ArgsType()
@@ -48,15 +48,15 @@ export class ProtocolDataResolver {
     return data.protocolData;
   }
 
-  @Query(() => [UserReserveData])
+  @Query(() => UserReservesData)
   async userData(
     @Args()
     { userAddress, lendingPoolAddressProvider }: UserArgs
-  ): Promise<UserReserveData[]> {
+  ): Promise<UserReservesData> {
     return getProtocolUserData(lendingPoolAddressProvider, userAddress);
   }
 
-  @Subscription(() => [UserReserveData], {
+  @Subscription(() => UserReservesData, {
     topics: Topics.USER_DATA_UPDATE,
     filter: ({ payload, args }: ResolverFilterData<UserDataPayload, UserArgs>) =>
       payload.lendingPoolAddressProvider.toLowerCase() ===
@@ -66,7 +66,7 @@ export class ProtocolDataResolver {
   async userDataUpdate(
     @Root() { userAddress, lendingPoolAddressProvider }: UserDataPayload,
     @Args() args: UserArgs
-  ): Promise<UserReserveData[]> {
+  ): Promise<UserReservesData> {
     return getProtocolUserData(lendingPoolAddressProvider, userAddress, false);
   }
 }

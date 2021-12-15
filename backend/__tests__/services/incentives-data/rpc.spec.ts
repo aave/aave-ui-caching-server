@@ -18,8 +18,6 @@ describe('rpc', () => {
       expect(response.aIncentiveData).toBeInstanceOf(Object);
       expect(response.vIncentiveData).toBeInstanceOf(Object);
       expect(response.sIncentiveData).toBeInstanceOf(Object);
-      expect(typeof response.aIncentiveData.emissionPerSecond).toEqual('string');
-      expect(typeof response.aIncentiveData.emissionEndTimestamp).toEqual('number');
     });
   });
 

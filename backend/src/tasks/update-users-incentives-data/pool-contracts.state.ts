@@ -39,9 +39,9 @@ export const init = async (
   );
 
   // get all incentive providers:
-  const reserveIncentives: ReserveIncentivesData[] = await getPoolIncentivesRPC({
-    lendingPoolAddressProvider,
-  });
+  const reserveIncentives: ReserveIncentivesData[] = await getPoolIncentivesRPC(
+    lendingPoolAddressProvider
+  );
   const incentiveControllers: string[] = [];
   reserveIncentives.forEach((incentive: ReserveIncentivesData) => {
     const aIncentiveController = incentive.aIncentiveData.incentiveControllerAddress.toLowerCase();

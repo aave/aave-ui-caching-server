@@ -1,10 +1,9 @@
 import {
-  Denominations,
-  ReserveIncentiveWithFeedsResponse,
+  ReservesIncentiveDataHumanized,
   UiIncentiveDataProvider,
   UiIncentiveDataProviderContext,
   UiIncentiveDataProviderInterface,
-  UserReserveIncentiveDataHumanizedResponse,
+  UserReservesIncentivesDataHumanized,
 } from '@aave/contract-helpers';
 import { ethereumProvider } from '../../helpers/ethereum';
 import { CONFIG } from '../../config';
@@ -13,16 +12,10 @@ import { UserIncentivesData } from '../../graphql/object-types/user-incentives';
 
 let uiIncentiveProvider: UiIncentiveDataProviderInterface;
 
-export type IncentivesRPCType = {
-  lendingPoolAddressProvider: string;
-  chainlinkFeedsRegistry?: string;
-  quote?: Denominations;
-};
-
 export const getPoolIncentivesDataProvider = (): UiIncentiveDataProviderInterface => {
   if (!uiIncentiveProvider) {
     const uiIncentiveProviderConfig: UiIncentiveDataProviderContext = {
-      incentiveDataProviderAddress: CONFIG.UI_INCENTIVE_DATA_PROVIDER_ADDRESS,
+      uiIncentiveDataProviderAddress: CONFIG.UI_INCENTIVE_DATA_PROVIDER_ADDRESS,
       provider: ethereumProvider,
     };
     uiIncentiveProvider = new UiIncentiveDataProvider(uiIncentiveProviderConfig);
@@ -34,20 +27,14 @@ export const getPoolIncentivesDataProvider = (): UiIncentiveDataProviderInterfac
  * Get the pool reserves incentives data using rpc
  * @param lendingPoolAddressProvider The lending pool address provider address
  */
-export const getPoolIncentivesRPC = async ({
-  lendingPoolAddressProvider,
-  chainlinkFeedsRegistry,
-  quote,
-}: IncentivesRPCType): Promise<ReserveIncentivesData[]> => {
+export const getPoolIncentivesRPC = async (
+  lendingPoolAddressProvider
+): Promise<ReserveIncentivesData[]> => {
   const uiIncentiveProvider = getPoolIncentivesDataProvider();
 
   // TODO: case there for other params?
-  const rawReservesIncentives: ReserveIncentiveWithFeedsResponse[] =
-    await uiIncentiveProvider.getIncentivesDataWithPrice({
-      lendingPoolAddressProvider,
-      chainlinkFeedsRegistry,
-      quote,
-    });
+  const rawReservesIncentives: ReservesIncentiveDataHumanized[] =
+    await uiIncentiveProvider.getReservesIncentivesDataHumanized(lendingPoolAddressProvider);
 
   return rawReservesIncentives;
 };
@@ -58,11 +45,11 @@ export const getUserPoolIncentivesRPC = async (
 ): Promise<UserIncentivesData[]> => {
   const uiIncentiveProvider = getPoolIncentivesDataProvider();
 
-  const rawUserReservesIncenvites: UserReserveIncentiveDataHumanizedResponse[] =
-    await uiIncentiveProvider.getUserReservesIncentivesDataHumanized(
-      userAddress,
-      lendingPoolAddressProvider
-    );
+  const rawUserReservesIncenvites: UserReservesIncentivesDataHumanized[] =
+    await uiIncentiveProvider.getUserReservesIncentivesDataHumanized({
+      user: userAddress,
+      lendingPoolAddressProvider,
+    });
 
   return rawUserReservesIncenvites;
 };

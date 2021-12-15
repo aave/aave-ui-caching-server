@@ -103,6 +103,53 @@ export class ReserveData {
 
   @Field()
   interestRateStrategyAddress: string;
+
+  // V3 specific
+
+  @Field()
+  isPaused: boolean;
+
+  @Field()
+  accruedToTreasury: string;
+
+  @Field()
+  unbacked: string;
+
+  @Field()
+  isolationModeTotalDebt: string;
+
+  @Field()
+  debtCeiling: string;
+
+  @Field()
+  debtCeilingDecimals: number;
+
+  @Field()
+  eModeCategoryId: number;
+
+  @Field()
+  borrowCap: string;
+
+  @Field()
+  supplyCap: string;
+
+  @Field()
+  eModeLtv: number;
+
+  @Field()
+  eModeLiquidationThreshold: number;
+
+  @Field()
+  eModeLiquidationBonus: number;
+
+  @Field()
+  eModePriceSource: string;
+
+  @Field()
+  eModeLabel: string;
+
+  @Field()
+  borrowableInIsolation: boolean;
 }
 
 @ObjectType()

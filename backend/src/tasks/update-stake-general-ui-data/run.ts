@@ -19,4 +19,4 @@ export async function updateStakeGeneralUIData(poolingInterval = 1) {
   }
 }
 
-updateStakeGeneralUIData(STAKING_CONFIG.STAKE_DATA_POOLING_INTERVAL);
+STAKING_CONFIG && updateStakeGeneralUIData(STAKING_CONFIG.STAKE_DATA_POOLING_INTERVAL);

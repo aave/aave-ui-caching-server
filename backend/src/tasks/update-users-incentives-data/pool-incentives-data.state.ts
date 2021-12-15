@@ -12,21 +12,28 @@ interface PoolIncentivesData {
 let protocolDataReserves: PoolIncentivesData[] = [];
 
 export const fetchAndAdd = async (poolAddress: string) => {
-  const reservesList: string[] = [];
-  const poolIncentives: ReserveIncentivesData[] = await getPoolIncentives({
-    lendingPoolAddressProvider: poolAddress,
-  });
+  const poolIncentives: ReserveIncentivesData[] = await getPoolIncentives(poolAddress);
+  const tokenAddresses: Set<string> = new Set();
+
   poolIncentives.forEach((reserve) => {
-    if (reserve.aIncentiveData.emissionEndTimestamp !== 0) {
-      reservesList.push(reserve.aIncentiveData.tokenAddress);
-    }
-    if (reserve.sIncentiveData.emissionEndTimestamp !== 0) {
-      reservesList.push(reserve.sIncentiveData.tokenAddress);
-    }
-    if (reserve.vIncentiveData.emissionEndTimestamp !== 0) {
-      reservesList.push(reserve.vIncentiveData.tokenAddress);
-    }
+    reserve.aIncentiveData.rewardsTokenInformation.map((rewardInfo) => {
+      if (rewardInfo.emissionEndTimestamp !== 0) {
+        tokenAddresses.add(reserve.aIncentiveData.tokenAddress);
+      }
+    });
+    reserve.sIncentiveData.rewardsTokenInformation.map((rewardInfo) => {
+      if (rewardInfo.emissionEndTimestamp !== 0) {
+        tokenAddresses.add(reserve.sIncentiveData.tokenAddress);
+      }
+    });
+    reserve.vIncentiveData.rewardsTokenInformation.map((rewardInfo) => {
+      if (rewardInfo.emissionEndTimestamp !== 0) {
+        tokenAddresses.add(reserve.vIncentiveData.tokenAddress);
+      }
+    });
   });
+
+  const reservesList: string[] = Array.from(tokenAddresses);
 
   add(poolAddress, reservesList);
 

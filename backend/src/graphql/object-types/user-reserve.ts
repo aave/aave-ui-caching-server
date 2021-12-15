@@ -23,3 +23,12 @@ export class UserReserveData {
   @Field()
   stableBorrowLastUpdateTimestamp: number;
 }
+
+@ObjectType()
+export class UserReservesData {
+  @Field(() => [UserReserveData])
+  userReserves: UserReserveData[];
+
+  @Field()
+  userEmodeCategoryId: number;
+}

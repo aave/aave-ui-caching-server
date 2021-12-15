@@ -1,7 +1,8 @@
 version: "3.5"
 
 x-common-environment: &common-environment
-  image: node:14
+  image: node:16
+  user: node
   working_dir: /app
   volumes:
     - ./backend:/app
@@ -9,8 +10,8 @@ x-common-environment: &common-environment
   environment:
     REDIS_HOST: "redis"
 
-    CHAIN_ID: "1"
-    RPC_URL: "${RPC_URL}"
+    CHAIN_ID: "137"
+    RPC_URL: "https://polygon-rpc.com"
 
   depends_on:
     - redis

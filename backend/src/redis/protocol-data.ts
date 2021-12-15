@@ -10,7 +10,7 @@ interface RedisProtcolPoolData {
 export const setProtocolDataRedis = async (
   poolAddress: string,
   data: RedisProtcolPoolData
-): Promise<string> => setExpireDataInRedis(poolAddress, JSON.stringify(data));
+): Promise<string | null> => setExpireDataInRedis(poolAddress, JSON.stringify(data));
 
 export const getProtocolDataRedis = async (
   poolAddress: string

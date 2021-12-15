@@ -1,7 +1,16 @@
 import { Field, ObjectType } from 'type-graphql';
 
 @ObjectType()
-export class IncentivesData {
+export class RewardInfo {
+  @Field()
+  rewardTokenSymbol: string;
+
+  @Field()
+  rewardTokenAddress: string;
+
+  @Field()
+  rewardOracleAddress: string;
+
   @Field()
   emissionPerSecond: string;
 
@@ -15,28 +24,28 @@ export class IncentivesData {
   emissionEndTimestamp: number;
 
   @Field()
-  tokenAddress: string;
-
-  @Field()
-  rewardTokenAddress: string;
+  rewardPriceFeed: string;
 
   @Field()
   rewardTokenDecimals: number;
 
   @Field()
-  incentiveControllerAddress: string;
-
-  @Field()
   precision: number;
 
   @Field()
-  priceFeed: string;
-
-  @Field()
-  priceFeedTimestamp: number;
-
-  @Field()
   priceFeedDecimals: number;
+}
+
+@ObjectType()
+export class IncentiveData {
+  @Field()
+  tokenAddress: string;
+
+  @Field()
+  incentiveControllerAddress: string;
+
+  @Field(() => [RewardInfo])
+  rewardsTokenInformation: RewardInfo[];
 }
 
 @ObjectType()
@@ -44,12 +53,12 @@ export class ReserveIncentivesData {
   @Field()
   underlyingAsset: string;
 
-  @Field(() => IncentivesData)
-  aIncentiveData: IncentivesData;
+  @Field(() => IncentiveData)
+  aIncentiveData: IncentiveData;
 
-  @Field(() => IncentivesData)
-  vIncentiveData: IncentivesData;
+  @Field(() => IncentiveData)
+  vIncentiveData: IncentiveData;
 
-  @Field(() => IncentivesData)
-  sIncentiveData: IncentivesData;
+  @Field(() => IncentiveData)
+  sIncentiveData: IncentiveData;
 }

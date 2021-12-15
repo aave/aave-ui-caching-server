@@ -1,20 +1,17 @@
-import { getPoolIncentivesRPC, getUserPoolIncentivesRPC, IncentivesRPCType } from '.';
+import { getPoolIncentivesRPC, getUserPoolIncentivesRPC } from '.';
 import { ReserveIncentivesData } from '../../graphql/object-types/incentives';
 import { UserIncentivesData } from '../../graphql/object-types/user-incentives';
 import { createHash } from '../../helpers/utils';
 import {
   getPoolIncentivesDataRedis,
-  RedisPoolIncentivesData,
   setPoolIncentivesDataRedis,
   getPoolIncentivesUserDataRedis,
   setPoolIncentivesUserDataRedis,
 } from '../../redis';
 
-export const getPoolIncentives = async ({
-  lendingPoolAddressProvider,
-  chainlinkFeedsRegistry,
-  quote,
-}: IncentivesRPCType): Promise<ReserveIncentivesData[]> => {
+export const getPoolIncentives = async (
+  lendingPoolAddressProvider: string
+): Promise<ReserveIncentivesData[]> => {
   const incentivesKey = `incentives-${lendingPoolAddressProvider}`;
   try {
     const poolIncentives = await getPoolIncentivesDataRedis(incentivesKey);
@@ -25,11 +22,9 @@ export const getPoolIncentives = async ({
     console.log('Error `getPoolIncentivesDataRedis`', { error, lendingPoolAddressProvider });
   }
 
-  const incentivesData: ReserveIncentivesData[] = await getPoolIncentivesRPC({
-    lendingPoolAddressProvider,
-    chainlinkFeedsRegistry,
-    quote,
-  });
+  const incentivesData: ReserveIncentivesData[] = await getPoolIncentivesRPC(
+    lendingPoolAddressProvider
+  );
   try {
     await setPoolIncentivesDataRedis(incentivesKey, {
       data: incentivesData,

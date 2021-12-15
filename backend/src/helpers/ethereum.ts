@@ -16,16 +16,13 @@ export const ethereumProvider = new providers.StaticJsonRpcProvider(RPC_URL);
 export const alchemyWeb3Provider = createAlchemyWeb3(RPC_URL);
 
 export async function getBlockNumber(useCache = true): Promise<number> {
-  let blockNumberStr: string;
-
   if (useCache) {
     try {
-      blockNumberStr = await getBlockNumberRedis();
+      const blockNumberStr = await getBlockNumberRedis();
+      if (blockNumberStr) {
+        return Number(blockNumberStr);
+      }
     } catch (e) {}
-
-    if (blockNumberStr) {
-      return Number(blockNumberStr);
-    }
   }
 
   return await getBlockNumberRpc();
