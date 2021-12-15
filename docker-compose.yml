@@ -23,33 +23,33 @@ services:
       - 3000:3000
     command: "npm run start"
 
-  # general_reserves_data_loader:
-  #   <<: *common-environment
-  #   command: "npm run job:update-general-reserves-data"
+  general_reserves_data_loader:
+    <<: *common-environment
+    command: "npm run job:update-general-reserves-data"
 
-  # reserves_incentives_data_loader:
-  #   <<: *common-environment
-  #   command: "npm run job:update-reserve-incentives-data"
+  reserves_incentives_data_loader:
+    <<: *common-environment
+    command: "npm run job:update-reserve-incentives-data"
 
-  # user_incentives_data_loader:
-  #   <<: *common-environment
-  #   command: "npm run job:update-users-incentives-data"
+  user_incentives_data_loader:
+    <<: *common-environment
+    command: "npm run job:update-users-incentives-data"
 
-  # user_data_loader:
-  #   <<: *common-environment
-  #   command: "npm run job:update-users-data"
+  user_data_loader:
+    <<: *common-environment
+    command: "npm run job:update-users-data"
 
-  # stake_user_ui_data_loader:
-  #   <<: *common-environment
-  #   command: "npm run job:update-stake-user-ui-data"
+  stake_user_ui_data_loader:
+    <<: *common-environment
+    command: "npm run job:update-stake-user-ui-data"
 
-  # stake_general_ui_data_loader:
-  #   <<: *common-environment
-  #   command: "npm run job:update-stake-general-ui-data"
+  stake_general_ui_data_loader:
+    <<: *common-environment
+    command: "npm run job:update-stake-general-ui-data"
 
-  # block_number_loader:
-  #   <<: *common-environment
-  #   command: "npm run job:update-block-number"
+  block_number_loader:
+    <<: *common-environment
+    command: "npm run job:update-block-number"
 
   redis:
     image: redis:6-alpine
