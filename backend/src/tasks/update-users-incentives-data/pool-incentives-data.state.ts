@@ -12,9 +12,7 @@ interface PoolIncentivesData {
 let protocolDataReserves: PoolIncentivesData[] = [];
 
 export const fetchAndAdd = async (poolAddress: string) => {
-  const poolIncentives: ReserveIncentivesData[] = await getPoolIncentives({
-    lendingPoolAddressProvider: poolAddress,
-  });
+  const poolIncentives: ReserveIncentivesData[] = await getPoolIncentives(poolAddress);
   const tokenAddresses: Set<string> = new Set();
 
   poolIncentives.forEach((reserve) => {

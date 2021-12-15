@@ -10,7 +10,7 @@ import {
 } from '../../redis';
 
 export const getPoolIncentives = async (
-  lendingPoolAddressProvider
+  lendingPoolAddressProvider: string
 ): Promise<ReserveIncentivesData[]> => {
   const incentivesKey = `incentives-${lendingPoolAddressProvider}`;
   try {
