@@ -24,6 +24,7 @@ export class UserReserveData {
   stableBorrowLastUpdateTimestamp: number;
 }
 
+@ObjectType()
 export class UserReservesData {
   @Field(() => [UserReserveData])
   userReserves: UserReserveData[];
