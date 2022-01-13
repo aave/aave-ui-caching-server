@@ -69,7 +69,7 @@ jobs:
         shell: bash
         run: |
           kubectl apply -f rendered.yml
-          kubectl wait --for condition=ready --timeout 20s pods --all || \
+          kubectl wait --for condition=ready --timeout 30s pods --all || \
           { kubectl get pods && exit 1; }
 
       - uses: actions/github-script@v5

@@ -1,7 +1,8 @@
 from typing import Sequence, Optional
 
 from kdsl.apps.v1 import Deployment, DeploymentSpec, DeploymentStrategy, RollingUpdateDeployment
-from kdsl.core.v1 import Service, ServiceSpec, PodSpec, ObjectMeta, ContainerItem, Probe, ExecAction
+from kdsl.core.v1 import Service, ServiceSpec, PodSpec, ObjectMeta, ContainerItem, Probe, ExecAction, EnvVarSource, \
+    EnvVarItem, ObjectFieldSelector
 from kdsl.extra import mk_env
 from kdsl.recipe import choice, collection
 
@@ -16,13 +17,17 @@ env = mk_env(
     ),
     CHAIN_ID=values.CHAIN_ID,
 )
+env = {**env, **dict(POD_IP=EnvVarItem(
+    valueFrom=EnvVarSource(
+        fieldRef=ObjectFieldSelector(
+            fieldPath="status.podIP"
+        )
+    )
+))}
 
 api_probe = Probe(
     exec=ExecAction(
-        command="curl -XPOST "
-                "--header 'content-type:application/json' "
-                "--data '{\"query\":\"query{__typename}\"}' "
-                "'http://localhost:3000/graphql'".split()
+        command="curl -XPOST --header content-type:application/json --data '{\"query\":\"query{__typename}\"}' http://localhost:3000/graphql".split()
     ),
     initialDelaySeconds=10,
     periodSeconds=15,
