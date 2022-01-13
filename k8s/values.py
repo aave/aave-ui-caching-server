@@ -10,7 +10,8 @@ MAINNET_RPC: str = env.str("MAINNET_RPC")
 
 shared_labels = dict(
     project="aave",
-    app="caching-server"
+    app="caching-server",
+    commit_sha=env.str("COMMIT_SHA")
 )
 shared_annotations = dict(
     git_repo="https://github.com/aave/aave-ui-caching-server"

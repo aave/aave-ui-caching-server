@@ -55,6 +55,7 @@ jobs:
           CHAIN_ID: ${{ matrix.CHAIN_ID }}
           POLYGON_RPC: "${{ secrets.POLYGON_RPC }}"
           MAINNET_RPC: "${{ secrets.MAINNET_RPC }}"
+          COMMIT_SHA: "${{ github.sha }}"
         run: |
           cd k8s/
           python3 main.py > ../rendered.yml
@@ -69,7 +70,8 @@ jobs:
         shell: bash
         run: |
           kubectl apply -f rendered.yml
-          kubectl wait --for condition=ready --timeout 30s pods --all || \
+          sleep 3
+          kubectl wait --for condition=ready --timeout 30s pods -l "commit_sha=${{ github.sha }}" || \
           { kubectl get pods && exit 1; }
 
       - uses: actions/github-script@v5
