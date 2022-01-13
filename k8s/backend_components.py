@@ -1,11 +1,11 @@
-import values
+from typing import Sequence, Optional
 
-from kdsl.core.v1 import ObjectMeta
-from kdsl.core.v1 import Service, PodSpec, ObjectMeta, ContainerItem
-from kdsl.apps.v1 import Deployment
+from kdsl.apps.v1 import Deployment, DeploymentSpec, DeploymentStrategy, RollingUpdateDeployment
+from kdsl.core.v1 import Service, ServiceSpec, PodSpec, ObjectMeta, ContainerItem, Probe, ExecAction
 from kdsl.extra import mk_env
 from kdsl.recipe import choice, collection
-from typing import Sequence, Optional
+
+import values
 
 env = mk_env(
     REDIS_HOST="redis",
@@ -17,20 +17,47 @@ env = mk_env(
     CHAIN_ID=values.CHAIN_ID,
 )
 
+api_probe = Probe(
+    exec=ExecAction(
+        command="curl -XPOST "
+                "--header 'content-type:application/json' "
+                "--data '{\"query\":\"query{__typename}\"}' "
+                "'http://localhost:3000/graphql'".split()
+    ),
+    initialDelaySeconds=10,
+    periodSeconds=15,
+    timeoutSeconds=3
+)
 
-def mk_backend_entries(name: str, command: Sequence[str], port: Optional[int] = None, scale: int = 1):
-    labels = dict(component=name)
+worker_probe = Probe(
+    exec=ExecAction(
+        command="ps -p 1".split()
+    ),
+    initialDelaySeconds=5,
+    periodSeconds=15
+)
+
+
+def mk_backend_entries(
+        name: str,
+        command: Sequence[str],
+        readiness_probe: Probe = worker_probe,
+        port: Optional[int] = None,
+        scale: int = 1,
+):
+    labels = dict(component=name, **values.shared_labels)
 
     metadata = ObjectMeta(
         name=name,
         namespace=values.NAMESPACE,
         labels=labels,
+        annotations=values.shared_annotations
     )
 
     if port is not None:
         service = Service(
             metadata=metadata,
-            spec=dict(
+            spec=ServiceSpec(
                 selector=labels,
                 ports={
                     port: dict(name="http"),
@@ -55,25 +82,29 @@ def mk_backend_entries(name: str, command: Sequence[str], port: Optional[int] = 
                 **container_ports_mixin,
                 command=command,
                 env=env,
+                readinessProbe=readiness_probe
             ),
         ),
     )
 
     deployment = Deployment(
         metadata=metadata,
-        spec=dict(
+        spec=DeploymentSpec(
             replicas=scale,
             selector=dict(matchLabels=labels),
             progressDeadlineSeconds=180,
-            strategy=dict(
+            strategy=DeploymentStrategy(
                 type="RollingUpdate",
-                rollingUpdate=dict(
+                rollingUpdate=RollingUpdateDeployment(
                     maxUnavailable=0,
                     maxSurge=1,
                 ),
             ),
             template=dict(
-                metadata=ObjectMeta(labels=labels),
+                metadata=ObjectMeta(
+                    labels=labels,
+                    annotations=values.shared_annotations
+                ),
                 spec=pod_spec,
             ),
         ),
@@ -87,8 +118,9 @@ entries = collection(
         *mk_backend_entries(
             name="api",
             command=["npm", "run", "prod"],
+            readiness_probe=api_probe,
             port=3000,
-            scale=4
+            scale=2
         ),
         *mk_backend_entries(
             name="protocol-data-loader",

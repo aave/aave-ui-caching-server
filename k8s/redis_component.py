@@ -1,23 +1,24 @@
+from kdsl.apps.v1 import Deployment, DeploymentSpec
+from kdsl.core.v1 import Service, ServiceSpec, PodSpec, ObjectMeta, ContainerItem
+
 import values
 
-from kdsl.core.v1 import ObjectMeta
-from kdsl.core.v1 import Service, PodSpec, ObjectMeta, ContainerItem
-from kdsl.apps.v1 import Deployment
-
 name = "redis"
-labels = dict(component=name)
+labels = dict(component=name, **values.shared_labels)
+annotations = values.shared_annotations
 
 
 metadata = ObjectMeta(
     name=name,
     namespace=values.NAMESPACE,
     labels=labels,
+    annotations=annotations
 )
 
 
 service = Service(
     metadata=metadata,
-    spec=dict(
+    spec=ServiceSpec(
         selector=labels,
         ports={
             6379: dict(name="redis"),
@@ -41,11 +42,14 @@ pod_spec = PodSpec(
 
 deployment = Deployment(
     metadata=metadata,
-    spec=dict(
+    spec=DeploymentSpec(
         replicas=1,
         selector=dict(matchLabels=labels),
         template=dict(
-            metadata=ObjectMeta(labels=labels),
+            metadata=ObjectMeta(
+                labels=labels,
+                annotations=annotations
+            ),
             spec=pod_spec,
         ),
     ),

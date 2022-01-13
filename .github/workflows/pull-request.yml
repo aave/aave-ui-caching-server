@@ -33,10 +33,7 @@ jobs:
     environment: preview
     needs: build
     container:
-      image: registry.gitlab.com/aave-tech/k8s:63f618c0
-      credentials:
-        username: github-actions
-        password: ${{ secrets.KUBE_IMAGE_PULL }}
+      image: qwolphin/kdsl:1.21.8
     strategy:
       fail-fast: false
       matrix:
@@ -66,11 +63,14 @@ jobs:
         run: |
           mkdir -p ~/.kube
           echo "${{ secrets.DEV_KUBECONFIG }}" > ~/.kube/config
+          kubectl config set-context --current --namespace="${{ env.NAMESPACE }}"
 
       - name: Apply k8s resources
+        shell: bash
         run: |
           kubectl apply -f rendered.yml
-          kubectl -n ${{ env.NAMESPACE }} rollout status --watch --timeout=30s deploy/api
+          kubectl wait --for condition=ready --timeout 20s pods --all || \
+          { kubectl get pods && exit 1; }
 
       - uses: actions/github-script@v5
         if: ${{ github.event.action == 'opened' || github.event.action == 'reopened' }}
