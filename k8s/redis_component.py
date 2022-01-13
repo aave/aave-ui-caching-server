@@ -4,15 +4,15 @@ from kdsl.core.v1 import Service, ServiceSpec, PodSpec, ObjectMeta, ContainerIte
 import values
 
 name = "redis"
-labels = dict(component=name, **values.shared_labels)
+labels = dict(component=name)
 annotations = values.shared_annotations
 
 
 metadata = ObjectMeta(
     name=name,
     namespace=values.NAMESPACE,
-    labels=labels,
-    annotations=annotations
+    labels=dict(**labels, **values.shared_labels),
+    annotations=values.shared_annotations
 )
 
 

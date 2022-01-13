@@ -1,8 +1,7 @@
 from typing import Sequence, Optional
 
 from kdsl.apps.v1 import Deployment, DeploymentSpec, DeploymentStrategy, RollingUpdateDeployment
-from kdsl.core.v1 import Service, ServiceSpec, PodSpec, ObjectMeta, ContainerItem, Probe, ExecAction, EnvVarSource, \
-    EnvVarItem, ObjectFieldSelector
+from kdsl.core.v1 import Service, ServiceSpec, PodSpec, ObjectMeta, ContainerItem, Probe, ExecAction
 from kdsl.extra import mk_env
 from kdsl.recipe import choice, collection
 
@@ -17,17 +16,14 @@ env = mk_env(
     ),
     CHAIN_ID=values.CHAIN_ID,
 )
-env = {**env, **dict(POD_IP=EnvVarItem(
-    valueFrom=EnvVarSource(
-        fieldRef=ObjectFieldSelector(
-            fieldPath="status.podIP"
-        )
-    )
-))}
 
 api_probe = Probe(
     exec=ExecAction(
-        command="curl -XPOST --header content-type:application/json --data '{\"query\":\"query{__typename}\"}' http://localhost:3000/graphql".split()
+        command="curl "
+                "-XPOST "
+                "--header content-type:application/json "
+                "--data '{\"query\":\"query{__typename}\"}' "
+                "http://localhost:3000/graphql".split()
     ),
     initialDelaySeconds=10,
     periodSeconds=15,
@@ -38,8 +34,8 @@ worker_probe = Probe(
     exec=ExecAction(
         command="ps -p 1".split()
     ),
-    initialDelaySeconds=5,
-    periodSeconds=15
+    initialDelaySeconds=8,
+    periodSeconds=30
 )
 
 
@@ -50,12 +46,12 @@ def mk_backend_entries(
         port: Optional[int] = None,
         scale: int = 1,
 ):
-    labels = dict(component=name, **values.shared_labels)
+    labels = dict(component=name)
 
     metadata = ObjectMeta(
         name=name,
         namespace=values.NAMESPACE,
-        labels=labels,
+        labels=dict(**labels, **values.shared_labels),
         annotations=values.shared_annotations
     )
 
@@ -101,13 +97,13 @@ def mk_backend_entries(
             strategy=DeploymentStrategy(
                 type="RollingUpdate",
                 rollingUpdate=RollingUpdateDeployment(
-                    maxUnavailable=0,
+                    maxUnavailable=1,
                     maxSurge=1,
                 ),
             ),
             template=dict(
                 metadata=ObjectMeta(
-                    labels=labels,
+                    labels=metadata.labels,
                     annotations=values.shared_annotations
                 ),
                 spec=pod_spec,
