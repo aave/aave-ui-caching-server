@@ -49,7 +49,7 @@ jobs:
         env: 
           MAINNET_RPC: '${{ secrets.MAINNET_RPC }}'
           POLYGON_RPC: '${{ secrets.POLYGON_RPC }}'
-          RECIPE: "base+chain${{ matrix.CHAIN_ID }}"
+          RECIPE: "chain${{ matrix.CHAIN_ID }}"
           DOMAIN: cache-api-${{ matrix.CHAIN_ID }}.aave.com
           CHAIN_ID: ${{ matrix.CHAIN_ID }}
           NAMESPACE: cache-${{ matrix.CHAIN_ID }}

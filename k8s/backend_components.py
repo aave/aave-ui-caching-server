@@ -1,7 +1,7 @@
 from typing import Sequence, Optional
 
 from kdsl.apps.v1 import Deployment, DeploymentSpec, DeploymentStrategy, RollingUpdateDeployment
-from kdsl.core.v1 import Service, ServiceSpec, PodSpec, ObjectMeta, ContainerItem, Probe, ExecAction
+from kdsl.core.v1 import Service, ServiceSpec, PodSpec, ObjectMeta, ContainerItem, Probe, ExecAction, HTTPGetAction
 from kdsl.extra import mk_env
 from kdsl.recipe import choice, collection
 
@@ -18,14 +18,12 @@ env = mk_env(
 )
 
 api_probe = Probe(
-    exec=ExecAction(
-        command="curl "
-                "-XPOST "
-                "--header content-type:application/json "
-                "--data '{\"query\":\"query{__typename}\"}' "
-                "http://localhost:3000/graphql".split()
+    httpGet=HTTPGetAction(
+        port="http",
+        path='/.well-known/apollo/server-health',
+        scheme='HTTP'
     ),
-    initialDelaySeconds=10,
+    initialDelaySeconds=15,
     periodSeconds=15,
     timeoutSeconds=3
 )
@@ -42,7 +40,7 @@ worker_probe = Probe(
 def mk_backend_entries(
         name: str,
         command: Sequence[str],
-        readiness_probe: Probe = worker_probe,
+        probe: Probe = worker_probe,
         port: Optional[int] = None,
         scale: int = 1,
 ):
@@ -83,7 +81,8 @@ def mk_backend_entries(
                 **container_ports_mixin,
                 command=command,
                 env=env,
-                readinessProbe=readiness_probe
+                readinessProbe=probe,
+                livenessProbe=probe,
             ),
         ),
     )
@@ -119,7 +118,7 @@ entries = collection(
         *mk_backend_entries(
             name="api",
             command=["npm", "run", "prod"],
-            readiness_probe=api_probe,
+            probe=api_probe,
             port=3000,
             scale=2
         ),

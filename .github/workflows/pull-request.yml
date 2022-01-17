@@ -50,7 +50,7 @@ jobs:
       - name: Render kdsl resources into yaml
         env:
           IMAGE: "${{ needs.build.outputs.image_name }}"
-          RECIPE: "base+chain${{ matrix.CHAIN_ID }}"
+          RECIPE: "chain${{ matrix.CHAIN_ID }}"
           DOMAIN: "${{ env.NAMESPACE }}.aaw.fi"
           CHAIN_ID: ${{ matrix.CHAIN_ID }}
           POLYGON_RPC: "${{ secrets.POLYGON_RPC }}"
