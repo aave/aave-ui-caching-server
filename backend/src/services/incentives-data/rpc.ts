@@ -34,7 +34,7 @@ export const getPoolIncentivesRPC = async (
 
   // TODO: case there for other params?
   const rawReservesIncentives: ReservesIncentiveDataHumanized[] =
-    await uiIncentiveProvider.getReservesIncentivesDataHumanized(lendingPoolAddressProvider);
+    await uiIncentiveProvider.getReservesIncentivesDataHumanized({ lendingPoolAddressProvider });
 
   return rawReservesIncentives;
 };
