@@ -32,7 +32,7 @@ export const getProtocolDataRPC = async (
 ): Promise<ProtocolData> => {
   const uiPoolProvider = getPoolDataProvider();
   const { reservesData, baseCurrencyData }: ReservesDataHumanized =
-    await uiPoolProvider.getReservesHumanized(lendingPoolAddressProvider);
+    await uiPoolProvider.getReservesHumanized({ lendingPoolAddressProvider });
 
   return {
     reserves: reservesData,
@@ -54,7 +54,10 @@ export const getProtocolUserDataRPC = async (
     userReserves: userReservesUnfiltered,
     userEmodeCategoryId,
   }: { userReserves: UserReserveDataHumanized[]; userEmodeCategoryId: number } =
-    await uiPoolProvider.getUserReservesHumanized(lendingPoolAddressProvider, userAddress);
+    await uiPoolProvider.getUserReservesHumanized({
+      lendingPoolAddressProvider,
+      user: userAddress,
+    });
 
   const userReservesFiltered: UserReserveData[] = userReservesUnfiltered.filter(
     (userReserve) =>
