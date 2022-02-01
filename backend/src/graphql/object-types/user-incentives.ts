@@ -42,6 +42,9 @@ export class UserIncentiveData {
 @ObjectType()
 export class UserIncentivesData {
   @Field()
+  id: string;
+
+  @Field()
   underlyingAsset: string;
 
   @Field(() => UserIncentiveData)
