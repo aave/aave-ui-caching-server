@@ -2,6 +2,7 @@ import {
   Args,
   ArgsType,
   Field,
+  Int,
   Query,
   Resolver,
   ResolverFilterData,
@@ -19,6 +20,9 @@ class ProtocolArgs {
   @Field()
   @IsEthAddress()
   lendingPoolAddressProvider: string;
+
+  @Field((type) => Int)
+  chainId: number;
 }
 
 @ArgsType()

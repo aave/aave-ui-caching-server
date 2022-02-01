@@ -7,6 +7,7 @@ import {
   ResolverFilterData,
   Root,
   Subscription,
+  Int,
 } from 'type-graphql';
 import { IncentivesDataPayload, Topics, UserIncentivesDataPayload } from '../../pubsub';
 import { getPoolIncentives, getUserPoolIncentives } from '../../services/incentives-data';
@@ -19,6 +20,9 @@ class PoolArgs {
   @Field()
   @IsEthAddress()
   lendingPoolAddressProvider: string;
+
+  @Field((type) => Int)
+  chainId: number;
 }
 
 @ArgsType()
