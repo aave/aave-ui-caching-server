@@ -9,7 +9,6 @@ x-common-environment: &common-environment
   restart: on-failure
   environment:
     REDIS_HOST: "redis"
-
     CHAIN_ID: "137"
     RPC_URL: "https://polygon-rpc.com"
 

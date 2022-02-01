@@ -3,6 +3,9 @@ import { Field, ObjectType } from 'type-graphql';
 @ObjectType()
 export class UserReserveData {
   @Field()
+  id: string;
+
+  @Field()
   underlyingAsset: string;
 
   @Field()

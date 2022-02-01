@@ -5,7 +5,7 @@ import {
   UiPoolDataProviderInterface,
   UserReserveDataHumanized,
 } from '@aave/contract-helpers';
-import { CONFIG } from '../../config';
+import { CONFIG, CHAIN_ID } from '../../config';
 import { ProtocolData } from '../../graphql/object-types/reserve';
 import { UserReserveData, UserReservesData } from '../../graphql/object-types/user-reserve';
 import { ethereumProvider } from '../../helpers/ethereum';
@@ -17,6 +17,7 @@ export const getPoolDataProvider = (): UiPoolDataProviderInterface => {
     const uiPoolDataProviderConfig: UiPoolDataProviderContext = {
       uiPoolDataProviderAddress: CONFIG.POOL_UI_DATA_PROVIDER_ADDRESS,
       provider: ethereumProvider,
+      chainId: CHAIN_ID,
     };
     uiPoolDataProvider = new UiPoolDataProvider(uiPoolDataProviderConfig);
   }
