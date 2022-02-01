@@ -6,7 +6,7 @@ import {
   UserReservesIncentivesDataHumanized,
 } from '@aave/contract-helpers';
 import { ethereumProvider } from '../../helpers/ethereum';
-import { CONFIG } from '../../config';
+import { CONFIG, CHAIN_ID } from '../../config';
 import { ReserveIncentivesData } from '../../graphql/object-types/incentives';
 import { UserIncentivesData } from '../../graphql/object-types/user-incentives';
 
@@ -17,6 +17,7 @@ export const getPoolIncentivesDataProvider = (): UiIncentiveDataProviderInterfac
     const uiIncentiveProviderConfig: UiIncentiveDataProviderContext = {
       uiIncentiveDataProviderAddress: CONFIG.UI_INCENTIVE_DATA_PROVIDER_ADDRESS,
       provider: ethereumProvider,
+      chainId: CHAIN_ID,
     };
     uiIncentiveProvider = new UiIncentiveDataProvider(uiIncentiveProviderConfig);
   }
