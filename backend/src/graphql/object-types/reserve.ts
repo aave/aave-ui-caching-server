@@ -66,6 +66,15 @@ export class ReserveData {
   variableRateSlope2: string;
 
   @Field()
+  baseStableBorrowRate: string;
+
+  @Field()
+  baseVariableBorrowRate: string;
+
+  @Field()
+  optimalUsageRatio: string;
+
+  @Field()
   liquidityIndex: string;
 
   @Field()
@@ -100,6 +109,9 @@ export class ReserveData {
 
   @Field()
   priceInMarketReferenceCurrency: string;
+
+  @Field()
+  priceOracle: string;
 
   @Field()
   interestRateStrategyAddress: string;
