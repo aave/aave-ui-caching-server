@@ -43,18 +43,19 @@ jobs:
 
       - name: Set k8s namespace
         shell: bash
-        run: echo "NAMESPACE=cache-${NS_SUFFIX,,}" | tr -c '[:alnum:]-=\n' '-' >>${GITHUB_ENV}
+        run: |
+          echo -e "NAMESPACE=cache-${NS_SUFFIX,,}\nENV_NAME=${{ github.head_ref }}" | tr -c '[:alnum:]-=\n_' '-' >> ${GITHUB_ENV}
         env:
           NS_SUFFIX: "${{ github.head_ref }}-${{ matrix.CHAIN_ID }}"
 
       - name: Render kdsl resources into yaml
         env:
-          IMAGE: "${{ needs.build.outputs.image_name }}"
+          MAINNET_RPC: "${{ secrets.MAINNET_RPC }}"
+          POLYGON_RPC: "${{ secrets.POLYGON_RPC }}"
           RECIPE: "chain${{ matrix.CHAIN_ID }}"
           DOMAIN: "${{ env.NAMESPACE }}.aaw.fi"
-          CHAIN_ID: ${{ matrix.CHAIN_ID }}
-          POLYGON_RPC: "${{ secrets.POLYGON_RPC }}"
-          MAINNET_RPC: "${{ secrets.MAINNET_RPC }}"
+          CHAIN_ID: "${{ matrix.CHAIN_ID }}"
+          IMAGE: "${{ needs.build.outputs.image_name }}"
           COMMIT_SHA: "${{ github.sha }}"
         run: |
           cd k8s/

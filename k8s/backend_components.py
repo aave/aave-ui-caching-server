@@ -23,7 +23,7 @@ api_probe = Probe(
         path='/.well-known/apollo/server-health',
         scheme='HTTP'
     ),
-    initialDelaySeconds=15,
+    initialDelaySeconds=10,
     periodSeconds=15,
     timeoutSeconds=3
 )
@@ -49,7 +49,7 @@ def mk_backend_entries(
     metadata = ObjectMeta(
         name=name,
         namespace=values.NAMESPACE,
-        labels=dict(**labels, **values.shared_labels),
+        labels=dict(**labels, **values.shared_labels, **values.datadog_labels(name)),
         annotations=values.shared_annotations
     )
 
@@ -74,8 +74,8 @@ def mk_backend_entries(
         container_ports_mixin = dict()
 
     pod_spec = PodSpec(
-        containers=dict(
-            main=ContainerItem(
+        containers={
+            name: ContainerItem(
                 image=values.IMAGE,
                 imagePullPolicy="Always",
                 **container_ports_mixin,
@@ -84,7 +84,7 @@ def mk_backend_entries(
                 readinessProbe=probe,
                 livenessProbe=probe,
             ),
-        ),
+        },
     )
 
     deployment = Deployment(
@@ -102,7 +102,7 @@ def mk_backend_entries(
             ),
             template=dict(
                 metadata=ObjectMeta(
-                    labels=metadata.labels,
+                    labels=dict(**metadata.labels),
                     annotations=values.shared_annotations
                 ),
                 spec=pod_spec,
@@ -120,7 +120,7 @@ entries = collection(
             command=["npm", "run", "prod"],
             probe=api_probe,
             port=3000,
-            scale=2
+            scale=1
         ),
         *mk_backend_entries(
             name="protocol-data-loader",

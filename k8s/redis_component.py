@@ -11,7 +11,7 @@ annotations = values.shared_annotations
 metadata = ObjectMeta(
     name=name,
     namespace=values.NAMESPACE,
-    labels=dict(**labels, **values.shared_labels),
+    labels=dict(**labels, **values.shared_labels, **values.datadog_labels(name)),
     annotations=values.shared_annotations
 )
 
@@ -29,7 +29,7 @@ service = Service(
 
 pod_spec = PodSpec(
     containers=dict(
-        main=ContainerItem(
+        redis=ContainerItem(
             image="redis:6-alpine",
             imagePullPolicy="Always",
             ports={
@@ -47,7 +47,7 @@ deployment = Deployment(
         selector=dict(matchLabels=labels),
         template=dict(
             metadata=ObjectMeta(
-                labels=labels,
+                labels=dict(**metadata.labels),
                 annotations=annotations
             ),
             spec=pod_spec,

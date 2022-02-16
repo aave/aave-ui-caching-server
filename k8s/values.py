@@ -11,8 +11,19 @@ MAINNET_RPC: str = env.str("MAINNET_RPC")
 shared_labels = dict(
     project="aave",
     app="caching-server",
-    commit_sha=env.str("COMMIT_SHA")
+    commit_sha=env.str("COMMIT_SHA"),
+    environment=env.str("ENV_NAME"),
 )
+
+
+def datadog_labels(service: str):
+    return {
+        "tags.datadoghq.com/env": env.str("ENV_NAME"),
+        "tags.datadoghq.com/service": service,
+        "tags.datadoghq.com/version": env.str("COMMIT_SHA"),
+    }
+
+
 shared_annotations = dict(
     git_repo="https://github.com/aave/aave-ui-caching-server"
 )
