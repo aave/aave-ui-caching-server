@@ -23,17 +23,19 @@ api_probe = Probe(
         path='/.well-known/apollo/server-health',
         scheme='HTTP'
     ),
-    initialDelaySeconds=10,
-    periodSeconds=15,
-    timeoutSeconds=3
+    initialDelaySeconds=5,
+    periodSeconds=10,
+    timeoutSeconds=3,
+    failureThreshold=5,
 )
 
 worker_probe = Probe(
     exec=ExecAction(
         command="ps -p 1".split()
     ),
-    initialDelaySeconds=8,
-    periodSeconds=30
+    initialDelaySeconds=5,
+    periodSeconds=20,
+    failureThreshold=5,
 )
 
 
