@@ -1,11 +1,11 @@
-import values
+from typing import Sequence, Optional
 
-from kdsl.core.v1 import ObjectMeta
-from kdsl.core.v1 import Service, PodSpec, ObjectMeta, ContainerItem
-from kdsl.apps.v1 import Deployment
+from kdsl.apps.v1 import Deployment, DeploymentSpec, DeploymentStrategy, RollingUpdateDeployment
+from kdsl.core.v1 import Service, ServiceSpec, PodSpec, ObjectMeta, ContainerItem, Probe, ExecAction, HTTPGetAction
 from kdsl.extra import mk_env
 from kdsl.recipe import choice, collection
-from typing import Sequence, Optional
+
+import values
 
 env = mk_env(
     REDIS_HOST="redis",
@@ -17,20 +17,46 @@ env = mk_env(
     CHAIN_ID=values.CHAIN_ID,
 )
 
+api_probe = Probe(
+    httpGet=HTTPGetAction(
+        port="http",
+        path='/.well-known/apollo/server-health',
+        scheme='HTTP'
+    ),
+    initialDelaySeconds=10,
+    periodSeconds=15,
+    timeoutSeconds=3
+)
 
-def mk_backend_entries(name: str, command: Sequence[str], port: Optional[int] = None, scale: int = 1):
+worker_probe = Probe(
+    exec=ExecAction(
+        command="ps -p 1".split()
+    ),
+    initialDelaySeconds=8,
+    periodSeconds=30
+)
+
+
+def mk_backend_entries(
+        name: str,
+        command: Sequence[str],
+        probe: Probe = worker_probe,
+        port: Optional[int] = None,
+        scale: int = 1,
+):
     labels = dict(component=name)
 
     metadata = ObjectMeta(
         name=name,
         namespace=values.NAMESPACE,
-        labels=labels,
+        labels=dict(**labels, **values.shared_labels, **values.datadog_labels(name)),
+        annotations=values.shared_annotations
     )
 
     if port is not None:
         service = Service(
             metadata=metadata,
-            spec=dict(
+            spec=ServiceSpec(
                 selector=labels,
                 ports={
                     port: dict(name="http"),
@@ -48,32 +74,37 @@ def mk_backend_entries(name: str, command: Sequence[str], port: Optional[int] = 
         container_ports_mixin = dict()
 
     pod_spec = PodSpec(
-        containers=dict(
-            main=ContainerItem(
+        containers={
+            name: ContainerItem(
                 image=values.IMAGE,
                 imagePullPolicy="Always",
                 **container_ports_mixin,
                 command=command,
                 env=env,
+                readinessProbe=probe,
+                livenessProbe=probe,
             ),
-        ),
+        },
     )
 
     deployment = Deployment(
         metadata=metadata,
-        spec=dict(
+        spec=DeploymentSpec(
             replicas=scale,
             selector=dict(matchLabels=labels),
             progressDeadlineSeconds=180,
-            strategy=dict(
+            strategy=DeploymentStrategy(
                 type="RollingUpdate",
-                rollingUpdate=dict(
-                    maxUnavailable=0,
+                rollingUpdate=RollingUpdateDeployment(
+                    maxUnavailable=1,
                     maxSurge=1,
                 ),
             ),
             template=dict(
-                metadata=ObjectMeta(labels=labels),
+                metadata=ObjectMeta(
+                    labels=dict(**metadata.labels),
+                    annotations=values.shared_annotations
+                ),
                 spec=pod_spec,
             ),
         ),
@@ -87,8 +118,9 @@ entries = collection(
         *mk_backend_entries(
             name="api",
             command=["npm", "run", "prod"],
+            probe=api_probe,
             port=3000,
-            scale=4
+            scale=1
         ),
         *mk_backend_entries(
             name="protocol-data-loader",

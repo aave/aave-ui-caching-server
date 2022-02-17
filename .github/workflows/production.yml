@@ -24,10 +24,7 @@ jobs:
     environment: production
     needs: build
     container: 
-      image: registry.gitlab.com/aave-tech/k8s:63f618c0
-      credentials:
-        username: github-actions
-        password: ${{ secrets.KUBE_IMAGE_PULL }}
+      image: qwolphin/kdsl:1.21.8
     strategy:
       fail-fast: false
       matrix:
@@ -52,11 +49,13 @@ jobs:
         env: 
           MAINNET_RPC: '${{ secrets.MAINNET_RPC }}'
           POLYGON_RPC: '${{ secrets.POLYGON_RPC }}'
-          RECIPE: "base+chain${{ matrix.CHAIN_ID }}"
+          RECIPE: "chain${{ matrix.CHAIN_ID }}"
           DOMAIN: cache-api-${{ matrix.CHAIN_ID }}.aave.com
           CHAIN_ID: ${{ matrix.CHAIN_ID }}
-          NAMESPACE: cache-${{ matrix.CHAIN_ID }}
           IMAGE: ${{ needs.build.outputs.image_name }}
+          COMMIT_SHA: "${{ github.sha }}"
+          NAMESPACE: cache-${{ matrix.CHAIN_ID }}
+          ENV_NAME: production
         run: |
           cd k8s/
           kubectl config set-context --current --namespace=${{ env.NAMESPACE }}
@@ -66,4 +65,6 @@ jobs:
         run: |
           kubectl apply -f rendered.yml --dry-run=server
           kubectl apply -f rendered.yml
-          kubectl rollout status --watch --timeout=30s deploy/api
+          sleep 3
+          kubectl wait --for condition=ready --timeout 30s pods -l "commit_sha=${{ github.sha }}" || \
+          { kubectl get pods && exit 1; }

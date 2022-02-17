@@ -33,10 +33,7 @@ jobs:
     environment: preview
     needs: build
     container:
-      image: registry.gitlab.com/aave-tech/k8s:63f618c0
-      credentials:
-        username: github-actions
-        password: ${{ secrets.KUBE_IMAGE_PULL }}
+      image: qwolphin/kdsl:1.21.8
     strategy:
       fail-fast: false
       matrix:
@@ -46,18 +43,20 @@ jobs:
 
       - name: Set k8s namespace
         shell: bash
-        run: echo "NAMESPACE=cache-${NS_SUFFIX,,}" | tr -c '[:alnum:]-=\n' '-' >>${GITHUB_ENV}
+        run: |
+          echo -e "NAMESPACE=cache-${NS_SUFFIX,,}\nENV_NAME=${{ github.head_ref }}" | tr -c '[:alnum:]-=\n_' '-' >> ${GITHUB_ENV}
         env:
           NS_SUFFIX: "${{ github.head_ref }}-${{ matrix.CHAIN_ID }}"
 
       - name: Render kdsl resources into yaml
         env:
-          IMAGE: "${{ needs.build.outputs.image_name }}"
-          RECIPE: "base+chain${{ matrix.CHAIN_ID }}"
-          DOMAIN: "${{ env.NAMESPACE }}.aaw.fi"
-          CHAIN_ID: ${{ matrix.CHAIN_ID }}
-          POLYGON_RPC: "${{ secrets.POLYGON_RPC }}"
           MAINNET_RPC: "${{ secrets.MAINNET_RPC }}"
+          POLYGON_RPC: "${{ secrets.POLYGON_RPC }}"
+          RECIPE: "chain${{ matrix.CHAIN_ID }}"
+          DOMAIN: "${{ env.NAMESPACE }}.aaw.fi"
+          CHAIN_ID: "${{ matrix.CHAIN_ID }}"
+          IMAGE: "${{ needs.build.outputs.image_name }}"
+          COMMIT_SHA: "${{ github.sha }}"
         run: |
           cd k8s/
           python3 main.py > ../rendered.yml
@@ -66,11 +65,15 @@ jobs:
         run: |
           mkdir -p ~/.kube
           echo "${{ secrets.DEV_KUBECONFIG }}" > ~/.kube/config
+          kubectl config set-context --current --namespace="${{ env.NAMESPACE }}"
 
       - name: Apply k8s resources
+        shell: bash
         run: |
           kubectl apply -f rendered.yml
-          kubectl -n ${{ env.NAMESPACE }} rollout status --watch --timeout=30s deploy/api
+          sleep 3
+          kubectl wait --for condition=ready --timeout 30s pods -l "commit_sha=${{ github.sha }}" || \
+          { kubectl get pods && exit 1; }
 
       - uses: actions/github-script@v5
         if: ${{ github.event.action == 'opened' || github.event.action == 'reopened' }}
