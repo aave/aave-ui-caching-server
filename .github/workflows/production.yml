@@ -66,5 +66,5 @@ jobs:
           kubectl apply -f rendered.yml --dry-run=server
           kubectl apply -f rendered.yml
           sleep 3
-          kubectl wait --for condition=ready --timeout 30s pods -l "commit_sha=${{ github.sha }}" || \
+          kubectl wait --for condition=ready --timeout 90s pods -l "commit_sha=${{ github.sha }}" || \
           { kubectl get pods && exit 1; }
