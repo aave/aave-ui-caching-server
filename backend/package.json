@@ -15,7 +15,7 @@
     "job:update-reserve-incentives-data": "ts-node ./src/tasks/update-reserve-incentives-data/run.ts"
   },
   "dependencies": {
-    "@aave/contract-helpers": "0.30.1-923789b95b2f39338bd14bd9a1c22acd075fdb5a.0+923789b",
+    "@aave/contract-helpers": "1.3.2",
     "@aave/protocol-js": "^3.0.0",
     "@alch/alchemy-web3": "^1.1.9",
     "apollo-server-express": "^3.5.0",
