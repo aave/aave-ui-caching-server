@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  labels: 
+    {{- include "common.labels" . | nindent 4 }}
+    component: api
+  annotations:
+  {{- include "common.annotations" . | nindent 4 }}
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1    
+      maxUnavailable: 0
+  replicas: 1
+  selector:
+    matchLabels:
+     component: api
+  template:
+    metadata:
+      annotations:
+      {{- with .Values.api.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- include "common.annotations" . | nindent 8 }}
+      labels:
+        {{- include "common.labels" . | nindent 8 }}
+        component: api
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      containers:
+        - name: api
+          env:
+            - name: REDIS_HOST
+              value: redis
+              {{- include "common.env" . | nindent 12 }}
+          image: "{{ .Values.common.image }}"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: '/.well-known/apollo/server-health'
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 3
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: '/.well-known/apollo/server-health'
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 3
+            failureThreshold: 5
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+    component: api
+  annotations:
+  {{- include "common.annotations" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      targetPort: http
+      protocol: TCP
+      name: http-3000
+  selector:
+    component: api

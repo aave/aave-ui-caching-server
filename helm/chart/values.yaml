@@ -1,0 +1,73 @@
+# Default values for chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+common:
+  labels:
+    pod: aave
+    project: interface
+    app: caching-server
+  annotations:
+    git-repo: "https://github.com/aave/aave-ui-caching-server"
+  image: "ghcr.io/aave/aave-ui-caching-server"
+  env:
+    - name: RPC_URL
+      value: ""
+    - name: CHAIN_ID
+      value: ""
+
+api:
+  podAnnotations: {}
+  resources:
+    requests:
+      cpu: 50m
+      memory: 200Mi
+
+
+workers:
+  protocol-data-loader:
+    enabled: true
+    podAnnotations: {}
+    resources: {}
+  reserve-incentives:
+    enabled: true
+    podAnnotations: {}
+    resources: {}
+  update-block-number-loader:
+    enabled: true
+    podAnnotations: {}
+    resources: {}
+  user-data-loader:
+    enabled: true
+    podAnnotations: {}
+    resources: {}
+  user-incentives:
+    enabled: true
+    podAnnotations: {}
+    resources: {}
+  
+  # only used on mainnet
+  stake-general-data-loader:
+    enabled: false
+    podAnnotations: {}
+    resources: {}
+  stake-user-data-loader:
+    enabled: false
+    podAnnotations: {}
+    resources: {}
+  
+
+ingress:
+  domain:
+  annotations:
+    nginx.ingress.kubernetes.io/auth-tls-secret: default/cf-mtls
+    nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+    nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+
+redis:
+  podAnnotations: {}
+  image: "redis:6-alpine"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 200Mi

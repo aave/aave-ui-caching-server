@@ -55,7 +55,7 @@ jobs:
           IMAGE: ${{ needs.build.outputs.image_name }}
           COMMIT_SHA: "${{ github.sha }}"
           NAMESPACE: cache-${{ matrix.CHAIN_ID }}
-          ENV_NAME: production
+          ENV_NAME: 'cache-production-${{ matrix.CHAIN_ID }}'
         run: |
           cd k8s/
           kubectl config set-context --current --namespace=${{ env.NAMESPACE }}

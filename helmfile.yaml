@@ -1,0 +1,48 @@
+# The desired states of Helm releases.
+#
+# Helmfile runs various helm commands to converge the current state in the live cluster to the desired state defined here.
+helmDefaults:
+  createNamespace: true
+  wait: true
+  timeout: 150
+  force: false
+  
+  # restores previous state in case of failed release (default false)
+  atomic: true
+  # when true, cleans up any new resources created during a failed release (default false)
+  cleanupOnFail: true
+  historyMax: 5
+
+releases:
+    {{- $chainID := (requiredEnv "CHAIN_ID") }}
+  - name: aave-caching-server-{{ $chainID }}
+    namespace: {{ requiredEnv "NAMESPACE" | quote }}
+    chart: ./helm/chart
+    values:
+    - common:
+        labels:
+          env: {{ requiredEnv "ENV_NAME" | quote }}
+          commit: {{ requiredEnv "COMMIT_SHA" | quote }}
+        image: {{ requiredEnv "IMAGE" | quote }}
+        env:
+          - name: CHAIN_ID
+            value: {{ $chainID | quote }}
+          - name: RPC_URL
+            {{- if eq $chainID "1" }}
+            value: {{ env "MAINNET_RPC" | quote }}
+            {{- else if eq $chainID "137" }}
+            value: {{ env "POLYGON_RPC" | quote }}
+            {{- else if eq $chainID "43114" }}
+            value: 'https://api.avax.network/ext/bc/C/rpc'
+            {{- end }}
+    
+    {{- if eq $chainID "1" }}
+    - workers:
+        stake-general-data-loader:
+          enabled: true
+        stake-user-data-loader:
+          enabled: true
+    {{- end }}
+
+    - ingress:
+        domain: {{ requiredEnv "DOMAIN" | quote }}
