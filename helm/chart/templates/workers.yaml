@@ -1,0 +1,84 @@
+{{- range $name, $val := .Values.workers }}
+{{- if $val.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels: 
+    {{- include "common.labels" $ | nindent 4 }}
+    component: {{ $name }}
+  annotations:
+  {{- include "common.annotations" $ | nindent 4 }}
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1    
+      maxUnavailable: 0
+  replicas: 1
+  selector:
+    matchLabels:
+     component: {{ $name }}
+  template:
+    metadata:
+      annotations:
+      {{- with $val.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- include "common.annotations" $ | nindent 8 }}
+      labels:
+        {{- include "common.labels" $ | nindent 8 }}
+        component: {{ $name }}
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      containers:
+        - name: {{ $name }}
+          env:
+            - name: REDIS_HOST
+              value: redis
+              {{- include "common.env" $ | nindent 12 }}
+          image: {{ $.Values.common.image }}
+          imagePullPolicy: Always
+          livenessProbe:
+            exec:
+              command:
+              - ps
+              - -p
+              - "1"
+            failureThreshold: 5
+            initialDelaySeconds: 5
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            exec:
+              command:
+              - ps
+              - -p
+              - "1"
+            failureThreshold: 5
+            initialDelaySeconds: 5
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            {{- if $val.resources }}
+            {{- toYaml $val.resources | nindent 12 }}
+            {{- else }}
+            requests:
+              cpu: 30m
+              memory: 256Mi
+            {{- end }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            capabilities:
+              drop:
+                - ALL
+{{- end }}
+{{- end }}

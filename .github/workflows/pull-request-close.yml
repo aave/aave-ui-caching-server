@@ -9,10 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: preview
     container: 
-      image: registry.gitlab.com/aave-tech/k8s:63f618c0
-      credentials:
-        username: github-actions
-        password: ${{ secrets.KUBE_IMAGE_PULL }}
+      image: ghcr.io/helmfile/helmfile-ubuntu:v0.145.4
     strategy:
       fail-fast: false
       matrix:
@@ -20,18 +17,19 @@ jobs:
     steps:
       - name: Set k8s namespace
         shell: bash
-        run: echo "NAMESPACE=cache-${NS_SUFFIX,,}" | tr -c '[:alnum:]-=\n' '-' >>${GITHUB_ENV}
+        run: |
+          cat <<EOF | tr -c '[:alnum:]-=\n' '-' >> ${GITHUB_ENV}
+          NAMESPACE=cache-${NS_SUFFIX,,}
+          EOF
         env:
           NS_SUFFIX: "${{ github.head_ref }}-${{ matrix.CHAIN_ID }}"
 
       - name: Remove preview env
         env:
-          REF_NAME: '${{ github.head_ref }}'
+          CHAIN_ID: '${{ matrix.CHAIN_ID }}'
         run: |
           mkdir -p ~/.kube
           echo "${{ secrets.DEV_KUBECONFIG }}" > ~/.kube/config
-          kubectl config set-context --current --namespace="${{ env.NAMESPACE }}"
-          kubectl delete deploy --all
-          kubectl delete svc --all
-          kubectl delete ingress --all
-          kubectl delete ns "${{ env.NAMESPACE }}"
+          kubectl -n "${NAMESPACE}" delete deploy --all
+          sleep 5
+          kubectl delete ns "${NAMESPACE}"

@@ -33,7 +33,7 @@ jobs:
     environment: preview
     needs: build
     container:
-      image: qwolphin/kdsl:1.21.8
+      image: ghcr.io/helmfile/helmfile-ubuntu:v0.145.4
     strategy:
       fail-fast: false
       matrix:
@@ -44,36 +44,35 @@ jobs:
       - name: Set k8s namespace
         shell: bash
         run: |
-          echo -e "NAMESPACE=cache-${NS_SUFFIX,,}\nENV_NAME=${{ github.head_ref }}" | tr -c '[:alnum:]-=\n_' '-' >> ${GITHUB_ENV}
+          cat <<EOF | tr -c '[:alnum:]-=\n_' '-' >> ${GITHUB_ENV}
+          NAMESPACE=cache-${NS_SUFFIX,,}
+          ENV_NAME=${{ github.head_ref }}
+          EOF
         env:
           NS_SUFFIX: "${{ github.head_ref }}-${{ matrix.CHAIN_ID }}"
-
-      - name: Render kdsl resources into yaml
-        env:
-          MAINNET_RPC: "${{ secrets.MAINNET_RPC }}"
-          POLYGON_RPC: "${{ secrets.POLYGON_RPC }}"
-          RECIPE: "chain${{ matrix.CHAIN_ID }}"
-          DOMAIN: "${{ env.NAMESPACE }}.aaw.fi"
-          CHAIN_ID: "${{ matrix.CHAIN_ID }}"
-          IMAGE: "${{ needs.build.outputs.image_name }}"
-          COMMIT_SHA: "${{ github.sha }}"
-        run: |
-          cd k8s/
-          python3 main.py > ../rendered.yml
 
       - name: Set up kubeconfig
         run: |
           mkdir -p ~/.kube
           echo "${{ secrets.DEV_KUBECONFIG }}" > ~/.kube/config
-          kubectl config set-context --current --namespace="${{ env.NAMESPACE }}"
 
       - name: Apply k8s resources
         shell: bash
+        env:
+          MAINNET_RPC: "${{ secrets.MAINNET_RPC }}"
+          POLYGON_RPC: "${{ secrets.POLYGON_RPC }}"
+          DOMAIN: "${{ env.NAMESPACE }}.aaw.fi"
+          CHAIN_ID: "${{ matrix.CHAIN_ID }}"
+          IMAGE: "${{ needs.build.outputs.image_name }}"
+          COMMIT_SHA: "${{ github.sha }}"
+          HELM_PLUGINS: '/root/.local/share/helm/plugins'
         run: |
-          kubectl apply -f rendered.yml
-          sleep 3
-          kubectl wait --for condition=ready --timeout 90s pods -l "commit_sha=${{ github.sha }}" || \
-          { kubectl get pods && exit 1; }
+          helmfile sync && exit 0 || true
+          helmfile status | grep pending-upgrade
+          RELEASE="$(helmfile status | grep NAME: | awk '{print $2}')"
+          REVISION="$(helmfile status | grep REVISION: | awk '{print $2}')"
+          helm rollback --wait -n "${NAMESPACE}" "${RELEASE}" "$((REVISION-1))"
+          helmfile sync
 
       - uses: actions/github-script@v5
         if: ${{ github.event.action == 'opened' || github.event.action == 'reopened' }}

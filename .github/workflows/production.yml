@@ -2,7 +2,7 @@ name: Production deploy
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}-prod'
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 on:
   workflow_dispatch:
@@ -11,7 +11,7 @@ jobs:
   build: 
     runs-on: ubuntu-latest
     outputs:
-      image_name: ${{ steps.build.outputs.image_name }}
+      image_name: '${{ steps.build.outputs.image_name }}'
     steps:
       - uses: actions/checkout@v2
 
@@ -24,7 +24,7 @@ jobs:
     environment: production
     needs: build
     container: 
-      image: qwolphin/kdsl:1.21.8
+      image: ghcr.io/helmfile/helmfile-ubuntu:v0.145.4
     strategy:
       fail-fast: false
       matrix:
@@ -38,33 +38,23 @@ jobs:
       - name: GCP Auth
         uses: google-github-actions/auth@v0.4.0
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v0.4.0
         with:
-          cluster_name: ${{ secrets.GKE_CLUSTER }}
-          location: ${{ secrets.GKE_CLUSTER_REGION }}
+          cluster_name: '${{ secrets.GKE_CLUSTER }}'
+          location: '${{ secrets.GKE_CLUSTER_REGION }}'
 
       - name: Render kdsl resources into yaml
         env: 
           MAINNET_RPC: '${{ secrets.MAINNET_RPC }}'
           POLYGON_RPC: '${{ secrets.POLYGON_RPC }}'
-          RECIPE: "chain${{ matrix.CHAIN_ID }}"
-          DOMAIN: cache-api-${{ matrix.CHAIN_ID }}.aave.com
-          CHAIN_ID: ${{ matrix.CHAIN_ID }}
-          IMAGE: ${{ needs.build.outputs.image_name }}
+          DOMAIN: 'cache-api-${{ matrix.CHAIN_ID }}.aave.com'
+          CHAIN_ID: '${{ matrix.CHAIN_ID }}'
+          IMAGE: '${{ needs.build.outputs.image_name }}'
           COMMIT_SHA: "${{ github.sha }}"
-          NAMESPACE: cache-${{ matrix.CHAIN_ID }}
+          NAMESPACE: 'cache-${{ matrix.CHAIN_ID }}'
           ENV_NAME: production
+          HELM_PLUGINS: '/root/.local/share/helm/plugins'
         run: |
-          cd k8s/
-          kubectl config set-context --current --namespace=${{ env.NAMESPACE }}
-          python3 main.py > ../rendered.yml
-      
-      - name: Apply k8s resources
-        run: |
-          kubectl apply -f rendered.yml --dry-run=server
-          kubectl apply -f rendered.yml
-          sleep 3
-          kubectl wait --for condition=ready --timeout 90s pods -l "commit_sha=${{ github.sha }}" || \
-          { kubectl get pods && exit 1; }
+          helmfile apply --suppress-diff
